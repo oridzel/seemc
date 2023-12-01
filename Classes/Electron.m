@@ -94,7 +94,7 @@ classdef Electron < handle
                 obj.EnergySE = obj.Material.MaterialData.Evb - fegdos(obj.EnergyLoss,obj.Material.MaterialData.Evb);
                 obj.Energy = obj.Energy - obj.EnergyLoss;
                 obj.died;
-                if ~obj.Dead && obj.Energy > obj.Material.MaterialData.Eg
+                if ~obj.Dead && obj.Energy+obj.EnergyLoss > obj.Material.MaterialData.Eg
                     [theta, angdist] = obj.Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
                     cumang = cumtrapz(theta, angdist);
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
