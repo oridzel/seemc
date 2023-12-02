@@ -3,7 +3,8 @@ classdef ElsepaRunner
     methods (Static)
         function [Res] = RunElsepa(Composition, E0)
             if isempty(E0); return; end
-            dir_Elsepa = 'C:/Users/onr5/OneDrive - NIST/dev/elsepa-2020';
+            % dir_Elsepa = 'C:/Users/onr5/OneDrive - NIST/dev/elsepa-2020';
+            dir_Elsepa = '/Users/olgaridzel/olgaridzel/dev/elsepa-2020';
             f_name = fullfile(dir_Elsepa,'lub.in');
             sumweights = sum(Composition.index);
             sigma_el = zeros(length(Composition.Z),numel(E0));
@@ -33,7 +34,7 @@ classdef ElsepaRunner
                 fclose(fid);
 
                 cd(dir_Elsepa);
-                system('elsepa < lub.in');
+                system('./elsepa < lub.in');
                     
                 DELIMITER = ' ';
             
