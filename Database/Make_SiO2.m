@@ -25,8 +25,8 @@ SiO2.Elastic.l_el = zeros(numel(E0),1);
 SiO2.Elastic.l_tr = zeros(numel(E0),1);
 SiO2.Elastic.x = E0;
 SiO2.DECS.E0 = E0;
-SiO2.Composition.Z = [6 8 1];
-SiO2.Composition.index = [5 2 8];
+SiO2.Composition.Z = [14 8];
+SiO2.Composition.index = [1 2];
 
 tic;
 [data] = ElsepaRunner.RunElsepa(SiO2.Composition,E0);

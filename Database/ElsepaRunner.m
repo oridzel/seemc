@@ -14,18 +14,12 @@ classdef ElsepaRunner
             
                 fid = fopen(f_name,'w');
                 fprintf(fid, 'IZ      %1.0f         atomic number                               [none]\n',Composition.Z(z));
-                fprintf(fid, 'MNUCL   3          rho_n (1=P, 2=U, 3=F, 4=Uu)                  [  3]\n');
-                fprintf(fid, 'NELEC   %1.0f         number of bound electrons                    [ IZ]\n',Composition.Z(z));
-                fprintf(fid, 'MELEC   4          rho_e (1=TFM, 2=TFD, 3=DHFS, 4=DF, 5=file)   [  4]\n');
+                % fprintf(fid, 'MNUCL   3          rho_n (1=P, 2=U, 3=F, 4=Uu)                  [  3]\n');
+                % fprintf(fid, 'MELEC   4          rho_e (1=TFM, 2=TFD, 3=DHFS, 4=DF, 5=file)   [  4]\n');
                 fprintf(fid, 'MUFFIN  1          0=free atom, 1=muffin-tin model              [  0]\n');
-                fprintf(fid, 'RMUF   -1.0        muffin-tin radius (cm)                  [measured]\n');
+                % fprintf(fid, 'RMUF   -1        muffin-tin radius (cm)                  [measured]\n');
                 fprintf(fid, 'IELEC  -1          -1=electron, +1=positron                     [ -1]\n');
-                fprintf(fid, 'MEXCH   1          V_ex (0=none, 1=FM, 2=TF, 3=RT)              [  1]\n');
-                fprintf(fid, 'MCPOL   0          V_cp (0=none, 1=B, 2=LDA)                    [  0]\n');
-                fprintf(fid, 'VPOLA  -1.0        atomic polarizability (cm^3)            [measured]\n');
-                fprintf(fid, 'VPOLB  -1.0        b_pol parameter                          [default]\n');
-                fprintf(fid, 'MABS    2          W_abs (0=none, 1=LDA-I, 2=LDA-II)            [  0]\n');
-                fprintf(fid, 'IHEF    1          high-E factorization (0=no, 1=yes, 2=Born)   [  1]\n');
+                % fprintf(fid, 'MEXCH   1          V_ex (0=none, 1=FM, 2=TF, 3=RT)              [  1]\n');
 
                 for i=5:numel(E0)
                     fprintf(fid, 'EV      %1.0f       kinetic energy (eV)                         [none]\n',E0(i));

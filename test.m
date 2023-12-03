@@ -1,12 +1,19 @@
 clear;
 
-N = 10000;
-E0 = [50 75 100:100:500 750 1000];
-e = {};
+N = 1000;
+E0 = [50 100 200 500 700 1000];
+e = cell(length(E0),1);
+matname = 'Si';
 
+tic
 for i = 1:length(E0)
-    e{i} = simulateSEE(N,E0(i),'Si_DFT');
+    disp(E0(i))
+    e{i} = simulateSEE(N,E0(i),matname);
 end
+toc
+
+%% Ready results
+% load Si_DFT_e_array.mat;
 
 %% Histograms
 % spec_se = zeros(1);
@@ -16,24 +23,14 @@ bse = zeros(size(E0));
 for i = 1:length(E0)
     bse(i) = 0;
     sey(i) = 0;
-    for j = 1:length(e{i})
-        if ~e{i}(j).Inside && ~e{i}(j).Dead
-            if e{i}(j).isSecondary
-                % if length(spec_se) == 1 && n_se == 0
-                    % spec_se(1) = e(i).Energy;
-                %     n_se = n_se + 1;
-                % else
-                    % spec_se(end+1) = e(i).Energy;
+    for j = 1:N
+        for k = 1:length(e{i}{j})
+            if ~e{i}{j}(k).Inside && ~e{i}{j}(k).Dead
+                if e{i}{j}(k).isSecondary                    
                     sey(i) = sey(i) + 1;
-                % end
-            else
-                % if length(spec_se) == 1 && n_pe == 0
-                %     spec_pe(1) = e(i).Energy;
-                    % n_pe = n_pe + 1;
-                % else
-                    % spec_pe(end+1) = e(i).Energy;
+                else
                     bse(i) = bse(i) + 1;
-                % end
+                end
             end
         end
     end
@@ -43,11 +40,14 @@ end
 % {
 figure
 hold on
-load('C:\Users\onr5\OneDrive - NIST\dev\m-scripts\jmonsel_si.mat')
-plot(jmonsel(:,1),jmonsel(:,2),DisplayName='JMONSEL')
-plot(E0,(sey+bse)/N,DisplayName='TEY')
-plot(E0,bse/N,DisplayName='BSE')
-plot(E0,sey/N,DisplayName='SEY')
+box on
+plot(E0,(sey+bse)/N,DisplayName='TEY',LineWidth=2)
+plot(E0,bse/N,DisplayName='BSE',LineWidth=2)
+plot(E0,sey/N,DisplayName='SEY',LineWidth=2)
+xlabel('Energy (eV)')
+ylabel('Yield')
+title(matname)
+fontsize(16,"points")
 legend
 %}
 
