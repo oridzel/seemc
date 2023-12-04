@@ -25,9 +25,19 @@ function [iimfp,diimfp] = ndiimfp(osc,E0,custom_elf,custom_q,custom_omega,vararg
 
     if custom_elf
         [x,y] = meshgrid(custom_q,custom_omega);
-        www = repmat(osc.eloss,n_q,1);
-        qqq = transpose(exp(q)/a0);
-        res = transpose(interp2(x,y,custom_elf,qqq,www,'spline'));
+        ind = osc.eloss < 110;
+        www = repmat(osc.eloss(ind),n_q,1);
+        qqq = transpose(exp(q(ind,:))/a0);
+        res_custom = transpose(interp2(x,y,custom_elf,qqq,www,'spline'));
+        if E0*h2ev >= 110
+            osc.qtran = exp(q(~ind,:))/a0;
+            osc.eloss = osc.eloss(~ind);
+            res_mermin = eps_sum_allwq(osc,'bulk');
+            res = [res_custom; res_mermin];
+            osc.eloss = omega*h2ev;
+        else
+            res = res_custom;
+        end
     else
         osc.qtran = exp(q)/a0; 
         res = eps_sum_allwq(osc,'bulk');
