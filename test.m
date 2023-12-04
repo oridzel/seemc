@@ -3,7 +3,11 @@ clear;
 N = 10000;
 E0 = [25 50 75 100 200 500 700 1000];
 e = cell(length(E0),1);
+<<<<<<< HEAD
 matname = 'Si_DFT_b1l0';
+=======
+matname = 'Si_DL';
+>>>>>>> 12bbd384c62a2acbfecc98add9e9c72919291e97
 
 tStart = tic;
 for i = 1:length(E0)
