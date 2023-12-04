@@ -3,7 +3,7 @@ clear;
 N = 10000;
 E0 = [25 50 75 100 200 500 700 1000];
 e = cell(length(E0),1);
-matname = 'Si';
+matname = 'Si_DL';
 
 tStart = tic;
 for i = 1:length(E0)
