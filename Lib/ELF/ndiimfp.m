@@ -11,9 +11,9 @@ function [iimfp,diimfp] = ndiimfp(osc,E0,custom_elf,custom_q,custom_omega,vararg
     C = 137.036; % a.u.
     q1 = log( sqrt(E0*(2 + E0 / C^2 )) - sqrt((E0 - omega).*(2.0 + (E0 - omega) / C^2 )) );
     q2 = log( sqrt(E0*(2 + E0 / C^2 )) + sqrt((E0 - omega).*(2.0 + (E0 - omega) / C^2 )) );
-    q = zeros(length(omega),100);
+    q = zeros(length(omega),n_q);
     
-    for i = 1:100
+    for i = 1:n_q
         q(:,i) = q1 + (i-1)*(q2-q1)/n_q;
     end
     
@@ -25,19 +25,16 @@ function [iimfp,diimfp] = ndiimfp(osc,E0,custom_elf,custom_q,custom_omega,vararg
 
     if custom_elf
         [x,y] = meshgrid(custom_q,custom_omega);
-        ind = osc.eloss < 110;
-        www = repmat(osc.eloss(ind),n_q,1);
-        qqq = transpose(exp(q(ind,:))/a0);
-        res_custom = transpose(interp2(x,y,custom_elf,qqq,www,'spline'));
+        www = repmat(osc.eloss,n_q,1);
+        qqq = transpose(exp(q)/a0);
+        res_custom = transpose(interp2(x,y,custom_elf,qqq,www));
         if E0*h2ev >= 110
-            osc.qtran = exp(q(~ind,:))/a0;
-            osc.eloss = osc.eloss(~ind);
+            ind = isnan(res_custom);
+            osc.qtran = exp(q)/a0;
             res_mermin = eps_sum_allwq(osc,'bulk');
-            res = [res_custom; res_mermin];
-            osc.eloss = omega*h2ev;
-        else
-            res = res_custom;
+            res_custom(ind) = res_mermin(ind);
         end
+        res = res_custom;
     else
         osc.qtran = exp(q)/a0; 
         res = eps_sum_allwq(osc,'bulk');

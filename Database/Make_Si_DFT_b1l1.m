@@ -1,7 +1,7 @@
 function Si_DFT_b1l1 = Make_Si_DFT_b1l1
 
 E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
-N = 2000;
+N = 5000;
 
 %% Basic
 Si_DFT_b1l1.Mat = 'Si_DFT_b1l1';
@@ -18,6 +18,7 @@ Si_DFT_b1l1.Evb = 12;
 Si_DFT_b1l1.Affinity = 4.05;
 
 %% Elastic properties
+% {
 Si_DFT_b1l1.Elastic.x = zeros(numel(E0),1);
 Si_DFT_b1l1.Elastic.l_el = zeros(numel(E0),1);
 Si_DFT_b1l1.Elastic.l_tr = zeros(numel(E0),1);
@@ -35,6 +36,7 @@ for i = 1:numel(E0)
     Si_DFT_b1l1.Elastic.l_tr(i) = 1/data(i).sigma_tr1/Si_DFT_b1l1.Density;
     Si_DFT_b1l1.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
 end
+%}
 
 %% Inelastic properties
 osc.model = 'Mermin';
