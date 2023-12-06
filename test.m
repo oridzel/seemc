@@ -3,7 +3,7 @@ clear;
 N = 1000;
 E0 = [20:10:100 200 500 700 800 1000];
 e = cell(length(E0),1);
-matname = 'SiO2';
+matname = 'PMMA';
 
 tStart = tic;
 for i = 1:length(E0)

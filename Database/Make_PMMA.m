@@ -15,6 +15,9 @@ PMMA.Eg = 6.7;
 PMMA.Ep = 19.85;
 PMMA.Evb = 15.8;
 PMMA.Affinity = 4.3;
+PMMA.Phonon.eps_zero = 3.9;
+PMMA.Phonon.eps_inf = 2.2;
+PMMA.Phonon.eloss = 0.1;
 
 %% Elastic properties
 PMMA.Elastic.x = zeros(numel(E0),1);
