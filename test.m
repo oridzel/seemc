@@ -1,9 +1,9 @@
 clear;
 
-N = 10000;
-E0 = [25 50 75 100 200 500 700 1000];
+N = 1000;
+E0 = [20:10:100 200 500 700 800 1000];
 e = cell(length(E0),1);
-matname = 'Si_DFT_b0l0';
+matname = 'SiO2';
 
 tStart = tic;
 for i = 1:length(E0)

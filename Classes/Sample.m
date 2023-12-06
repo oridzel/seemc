@@ -3,6 +3,9 @@ classdef Sample
         Name
         isMetal    
     end
+    properties (Constant)
+        kbt = 9.445e-4
+    end
     properties
         MaterialData
     end
@@ -57,6 +60,18 @@ classdef Sample
 
         function emfp = getEMFP(obj,energy)
             emfp = interp1(obj.MaterialData.DECS.E0,obj.MaterialData.Elastic.l_el,energy);
+        end
+
+        function phmfp = getIPHMFP(obj,energy)
+            if isfield(obj.MaterialData,'Phonon')
+                dephe = obj.MaterialData.Phonon.eloss/energy;
+                sq_e = sqrt(1 - dephe);
+                phmfp = (obj.MaterialData.Phonon.eps_zero - obj.MaterialData.Phonon.eps_inf)...
+                    /(obj.MaterialData.Phonon.eps_zero*obj.MaterialData.Phonon.eps_inf)...
+                    *dephe*( (1/(exp(obj.MaterialData.Phonon.eloss/obj.kbt)-1))+1 )/2*log( (1.0+sq_e)/(1.0-sq_e) );
+            else
+                phmfp = 0;
+            end
         end
 
         function val = get.MaterialData(obj)

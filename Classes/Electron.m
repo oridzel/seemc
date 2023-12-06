@@ -20,6 +20,7 @@ classdef Electron < handle
     properties (Dependent)
         IIMFP
         IEMFP
+        IPHMFP
         ITMFP
     end
     methods
@@ -68,8 +69,10 @@ classdef Electron < handle
             rn = rand;
             if rn < obj.IEMFP/obj.ITMFP
                 obj.ScatteringType = 0;
-            else
+            elseif rn < (obj.IEMFP+obj.IIMFP)/obj.ITMFP
                 obj.ScatteringType = 1;
+            else
+                obj.ScatteringType = 2;
             end
         end
         function loss = scatter(obj)
@@ -80,7 +83,7 @@ classdef Electron < handle
                 cumdecs = cumtrapz(obj.Material.MaterialData.DECS.x,decs);
                 obj.Deflection(1) = interp1(cumdecs,obj.Material.MaterialData.DECS.x,rand);
                 obj.updateDirection;
-            else
+            elseif obj.ScatteringType == 1
                 [eloss,diimfp] = obj.Material.getDIIMFP(obj.Energy);
                 cumdiimfp = cumtrapz(eloss,diimfp);
                 cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
@@ -103,6 +106,15 @@ classdef Electron < handle
                         obj.updateDirection;
                     end
                 end
+            else
+                rn = rand;
+                e = obj.Energy/h2ev;
+                de = obj.Material.MaterialData.Phonon.eloss/h2ev;
+                bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
+                obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
+                obj.Energy = obj.Energy - obj.Material.MaterialData.Phonon.eloss;
+                obj.updateDirection;
+                loss = false;
             end
         end
         function escape(obj)
@@ -186,8 +198,11 @@ classdef Electron < handle
         function val = get.IEMFP(obj)
             val = 1/obj.Material.getEMFP(obj.Energy);
         end
+        function val = get.IPHMFP(obj)
+            val = obj.Material.getIPHMFP(obj.Energy);
+        end
         function val = get.ITMFP(obj)
-            val = obj.IIMFP + obj.IEMFP;
+            val = obj.IIMFP + obj.IEMFP + obj.IPHMFP;
         end
     end
 end
