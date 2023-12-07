@@ -13,4 +13,4 @@ MaterialData.Si_DFT_b0l0 = Make_Si_DFT_b0l0;
 MaterialData.Si_DFT_b1l0 = Make_Si_DFT_b1l0;
 
 % cd currentPath
-save MaterialData.mat MaterialData
+% save MaterialData.mat MaterialData
