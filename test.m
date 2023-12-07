@@ -1,6 +1,6 @@
 clear;
 
-N = 1000;
+N = 10000;
 E0 = [20:10:100 200 500 700 800 1000];
 e = cell(length(E0),1);
 matname = 'PMMA';
@@ -43,7 +43,7 @@ for i = 1:length(E0)
 end
 
 %% Yields
-% {
+%{
 figure
 hold on
 box on
