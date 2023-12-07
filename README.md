@@ -5,3 +5,5 @@ Monte Carlo simulation of Secondary Electron Emission
 ```bash
 unzip elsepa-2020.zip
 ```
+3. To create new MaterialData.mat run `MaterialData_script.m` with corresponding changes
+4. Save the new `MaterialData` struct to MaterialData.mat and reload the current MATLAB session
