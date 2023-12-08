@@ -1,7 +1,7 @@
 function SiO2 = Make_SiO2
 
 E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
-N = 5000;
+N = 4000;
 
 %% Basic
 SiO2 = struct;
@@ -20,6 +20,7 @@ SiO2.Phonon.eps_inf = 2.25;
 SiO2.Phonon.eloss = 0.1;
 
 %% Elastic properties
+% {
 SiO2.Elastic.x = zeros(numel(E0),1);
 SiO2.Elastic.l_el = zeros(numel(E0),1);
 SiO2.Elastic.l_tr = zeros(numel(E0),1);
@@ -37,6 +38,7 @@ for i = 1:numel(E0)
     SiO2.Elastic.l_tr(i) = 1/data(i).sigma_tr1/SiO2.Density;
     SiO2.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
 end
+%}
 
 %% Inelastic properties
 osc.model = 'Drude';
@@ -56,14 +58,12 @@ SiO2.q = osc.qtran;
 SiO2.DIIMFP = zeros(N,2,numel(E0));
 SiO2.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
-    energy = E0(i) + SiO2.Eg + SiO2.Evb;
-    if energy > 2*SiO2.Eg + SiO2.Evb
-        osc.eloss = eps:(energy-eps)/(N-1):energy;
+    if E0(i) > 2*SiO2.Eg + SiO2.Evb
+        energy = E0(i) - SiO2.Eg - SiO2.Evb;
+        osc.eloss = SiO2.Eg:(energy-SiO2.Eg)/(N-1):energy;
         SiO2.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, SiO2.DIIMFP(:,2,i)] = ndiimfp(osc,energy);
-        eloss_interp = SiO2.Eg:(energy-2*SiO2.Eg-SiO2.Evb)/N:energy-SiO2.Eg-SiO2.Evb;
-        iimfp_interp = interp1(osc.eloss,iimfp,eloss_interp);
-        SiO2.l_in(i) = 1/trapz(eloss_interp/h2ev,iimfp_interp)*a0;
+        [iimfp, SiO2.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        SiO2.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         SiO2.l_in(i) = Inf;
     end

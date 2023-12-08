@@ -45,7 +45,7 @@ osc.beps = 1;
 osc.Ef = Au.Ef; 
 osc.qtran = 0.01:0.01:20;
 osc.eloss = eps:.1:110;
-osc.egap = 0;
+osc.egap = eps;
 
 Au.ELF = eps_sum_allwq(osc,'bulk');
 Au.eloss = osc.eloss;
@@ -53,14 +53,12 @@ Au.q = osc.qtran;
 Au.DIIMFP = zeros(N,2,numel(E0));
 Au.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
-    energy = E0(i) + Au.Ef;
-    if energy > Au.Ef
+    if E0(i) > Au.Ef
+        energy = E0(i) - Au.Ef;
         osc.eloss = eps:(energy-eps)/(N-1):energy;
         Au.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Au.DIIMFP(:,2,i)] = ndiimfp(osc,energy);
-        eloss_interp = eps:(energy-eps-Au.Ef)/N:energy-Au.Ef;
-        iimfp_interp = interp1(osc.eloss,iimfp,eloss_interp);
-        Au.l_in(i) = 1/trapz(eloss_interp/h2ev,iimfp_interp)*a0;
+        [iimfp, Au.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        Au.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Au.l_in(i) = Inf;
     end

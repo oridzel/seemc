@@ -4,7 +4,7 @@ function [iimfp,diimfp] = ndiimfp(osc,E0,custom_elf,custom_q,custom_omega,vararg
         custom_elf = false;
     end
 
-    E0 = E0/h2ev;
+    E0 = (E0 - osc.egap)/h2ev;
     omega = osc.eloss/h2ev;
     n_q = 100;
     

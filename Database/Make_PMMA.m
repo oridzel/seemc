@@ -56,14 +56,12 @@ PMMA.q = osc.qtran;
 PMMA.DIIMFP = zeros(N,2,numel(E0));
 PMMA.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
-    energy = E0(i) + PMMA.Eg + PMMA.Evb;
-    if energy > 2*PMMA.Eg + PMMA.Evb
-        osc.eloss = eps:(energy-eps)/(N-1):energy;
+    if E0(i) > 2*PMMA.Eg + PMMA.Evb
+        energy = E0(i) - PMMA.Eg - PMMA.Evb;
+        osc.eloss = PMMA.Eg:(energy-PMMA.Eg)/(N-1):energy;
         PMMA.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, PMMA.DIIMFP(:,2,i)] = ndiimfp(osc,energy);
-        eloss_interp = PMMA.Eg:(energy-2*PMMA.Eg-PMMA.Evb)/N:energy-PMMA.Eg-PMMA.Evb;
-        iimfp_interp = interp1(osc.eloss,iimfp,eloss_interp);
-        PMMA.l_in(i) = 1/trapz(eloss_interp/h2ev,iimfp_interp)*a0;
+        [iimfp, PMMA.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        PMMA.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PMMA.l_in(i) = Inf;
     end

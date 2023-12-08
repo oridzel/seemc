@@ -52,8 +52,8 @@ osc.egap = Si_DFT_b1l1.Eg;
 
 current_full_path = dbstack('-completenames');
 current_file_name = dbstack;
-ind = strfind(current_full_path(1).file,['Database\' current_file_name(1).file]);
-dirData = [current_full_path(1).file(1:ind-2) filesep 'Data\'];
+ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
+dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
 load([dirData 'elf_si_dft_ocean_0_01_b1l1.mat'])
 Si_DFT_b1l1.ELF = elf;
 Si_DFT_b1l1.eloss = omega;
@@ -62,14 +62,12 @@ Si_DFT_b1l1.q = q;
 Si_DFT_b1l1.DIIMFP = zeros(N,2,numel(E0));
 Si_DFT_b1l1.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
-    energy = E0(i) + Si_DFT_b1l1.Eg + Si_DFT_b1l1.Evb;
-    if energy > 2*Si_DFT_b1l1.Eg + Si_DFT_b1l1.Evb
-        osc.eloss = eps:(energy-eps)/(N-1):energy;
+    if E0(i) > 2*Si_DFT_b1l1.Eg + Si_DFT_b1l1.Evb
+        energy = E0(i) - Si_DFT_b1l1.Eg - Si_DFT_b1l1.Evb;
+        osc.eloss = Si_DFT_b1l1.Eg:(energy-Si_DFT_b1l1.Eg)/(N-1):energy;
         Si_DFT_b1l1.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Si_DFT_b1l1.DIIMFP(:,2,i)] = ndiimfp(osc,energy,elf,q,omega);
-        eloss_interp = Si_DFT_b1l1.Eg:(energy-2*Si_DFT_b1l1.Eg-Si_DFT_b1l1.Evb)/N:energy-Si_DFT_b1l1.Eg-Si_DFT_b1l1.Evb;
-        iimfp_interp = interp1(osc.eloss,iimfp,eloss_interp);
-        Si_DFT_b1l1.l_in(i) = 1/trapz(eloss_interp/h2ev,iimfp_interp)*a0;
+        [iimfp, Si_DFT_b1l1.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        Si_DFT_b1l1.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Si_DFT_b1l1.l_in(i) = Inf;
     end

@@ -54,14 +54,12 @@ Si.q = osc.qtran;
 Si.DIIMFP = zeros(N,2,numel(E0));
 Si.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
-    energy = E0(i) + Si.Eg + Si.Evb;
-    if energy > 2*Si.Eg + Si.Evb
-        osc.eloss = eps:(energy-eps)/(N-1):energy;
+    if E0(i) > 2*Si.Eg + Si.Evb
+        energy = E0(i) - Si.Eg - Si.Evb;
+        osc.eloss = Si.Eg:(energy-Si.Eg)/(N-1):energy;
         Si.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Si.DIIMFP(:,2,i)] = ndiimfp(osc,energy);
-        eloss_interp = Si.Eg:(energy-2*Si.Eg-Si.Evb)/N:energy-Si.Eg-Si.Evb;
-        iimfp_interp = interp1(osc.eloss,iimfp,eloss_interp);
-        Si.l_in(i) = 1/trapz(eloss_interp/h2ev,iimfp_interp)*a0;
+        [iimfp, Si.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        Si.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Si.l_in(i) = Inf;
     end

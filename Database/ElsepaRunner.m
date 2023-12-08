@@ -30,8 +30,8 @@ classdef ElsepaRunner
                 fclose(fid);
 
                 cd(dir_Elsepa);
-                system('elsepa < lub.in');
-                % system('./elsepa < lub.in');
+                % system('elsepa < lub.in');
+                system('./elsepa < lub.in');
                     
                 DELIMITER = ' ';
             
