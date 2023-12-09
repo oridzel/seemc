@@ -39,25 +39,33 @@ classdef Electron < handle
                 obj.Generation = gen;
                 obj.isSecondary = se;
             end
-            if saveCoord
-                obj.saveCoordinates = true;
-                obj.coordinates(1,:) = obj.xyz;
-            end
+            
             if ~obj.isSecondary
-                % obj.Energy = e + obj.InnerPotential;
-                obj.Energy = e + obj.Material.MaterialData.Affinity;
+                if obj.Material.isMetal
+                    obj.Energy = e + obj.InnerPotential;
+                else
+                    obj.Energy = e + obj.Material.MaterialData.Affinity;
+                end
             else
                 obj.Energy = e;
+            end
+
+            if saveCoord
+                obj.saveCoordinates = true;
+                obj.coordinates(1,:) = [obj.xyz,obj.Energy];
             end
         end
         function travel(obj)
             s = -(1/obj.ITMFP)*log(rand);
+            if obj.xyz(3) + obj.uvw(3)*s < 0
+                s = abs(obj.xyz(3)/obj.uvw(3))+0.0001;
+            end
             obj.PathLength = obj.PathLength + s;
             obj.xyz(1) = obj.xyz(1) + obj.uvw(1)*s;
             obj.xyz(2) = obj.xyz(2) + obj.uvw(2)*s;
             obj.xyz(3) = obj.xyz(3) + obj.uvw(3)*s;
             if obj.saveCoordinates
-                obj.coordinates(end+1,:) = obj.xyz;
+                obj.coordinates(end+1,:) = [obj.xyz,obj.Energy];
             end
         end
         function dircos2ang(obj)
@@ -103,10 +111,14 @@ classdef Electron < handle
                     end
                 end
                 loss = true;
-                obj.EnergySE = obj.Material.MaterialData.Evb - fegdos(obj.EnergyLoss,obj.Material.MaterialData.Evb);
+                if obj.Material.isMetal
+                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Material.MaterialData.Ef);
+                else
+                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Material.MaterialData.Evb);
+                end
                 obj.Energy = obj.Energy - obj.EnergyLoss;
                 obj.died;
-                if ~obj.Dead && obj.Energy > obj.Material.MaterialData.Eg
+                if ~obj.Dead % && obj.Energy > obj.Material.MaterialData.Eg
                     [theta, angdist] = obj.Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
                     cumang = cumtrapz(theta, angdist);
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
@@ -130,7 +142,7 @@ classdef Electron < handle
             obj.dircos2ang;
             if obj.xyz(end) < 0
                 beta = pi - obj.Angles(1);
-                ecos = (obj.Energy + obj.Material.MaterialData.Eg + obj.Material.MaterialData.Evb)*cos(beta)^2;
+                ecos = obj.Energy*cos(beta)^2;
                 if ecos > obj.InnerPotential
                     t = 4*sqrt(1 - obj.InnerPotential/ecos)/(1 + sqrt(1 - obj.InnerPotential/ecos))^2;
                 else
@@ -139,7 +151,7 @@ classdef Electron < handle
                 if rand < t
                     obj.Inside = false;
                     obj.xyz(1) = obj.xyz(1) + sin(beta)*cos(obj.Angles(2))*obj.xyz(end)/cos(beta);
-                    obj.xyz(2) = obj.xyz(2) + sin(beta)*cos(obj.Angles(2))*obj.xyz(end)/cos(beta);
+                    obj.xyz(2) = obj.xyz(2) + sin(beta)*sin(obj.Angles(2))*obj.xyz(end)/cos(beta);
                     obj.xyz(3) = 0;
                     obj.Angles(1) = pi - asin(sin(beta)*sqrt(obj.Energy/(obj.Energy-obj.InnerPotential)));
                     if obj.Material.isMetal
@@ -148,24 +160,24 @@ classdef Electron < handle
                         obj.Energy = obj.Energy - obj.Material.MaterialData.Affinity;
                     end
                     if obj.saveCoordinates
-                        obj.coordinates(end,:) = obj.xyz;
+                        obj.coordinates(end,:) = [obj.xyz,obj.Energy+obj.InnerPotential];
                         x = obj.xyz(1) + 100*sin(obj.Angles(1))*cos(obj.Angles(2));
                         y = obj.xyz(2) + 100*sin(obj.Angles(1))*sin(obj.Angles(2));
-                        z = obj.xyz(3) + 100*cos(obj.Angles(2));
-                        obj.coordinates(end+1,:) = [x,y,z];
+                        z = obj.xyz(3) + 100*cos(obj.Angles(1));
+                        obj.coordinates(end+1,:) = [x,y,z,obj.Energy];
                     end
                 else
                     obj.uvw(end) = -1*obj.uvw(end);
                     obj.xyz(end) = -1*obj.xyz(end);
                     if obj.saveCoordinates
-                        obj.coordinates(end,:) = [obj.xyz(1),obj.xyz(2),-obj.xyz(3)];
+                        obj.coordinates(end,:) = [obj.xyz(1),obj.xyz(2),-obj.xyz(3),obj.Energy];
                     end
                 end
             end
         end
         function died(obj)
-            % if obj.Energy < obj.InnerPotential
-            if obj.Energy < obj.Material.MaterialData.Affinity
+            if obj.Energy < obj.InnerPotential
+            % if obj.Energy < obj.Material.MaterialData.Affinity
                 obj.Dead = true;
             end
         end

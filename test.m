@@ -1,29 +1,33 @@
 clear;
 
-N = 50;
+N = 1000;
 % E0 = [20:10:100 200 500 700 800 1000];
-E0 = 500;
+E0 = [1500 2000 3000 5000];
+% E0 = 1000;
 e = cell(length(E0),1);
-matname = 'Si';
+matname = 'Au';
+isMetal = true;
+trackTrajectories = false;
 
 tStart = tic;
 for i = 1:length(E0)
     disp(E0(i))
     tic
-    e{i} = simulateSEE(N,E0(i),matname,true);
+    e{i} = simulateSEE(N,E0(i),matname,isMetal,trackTrajectories);
     toc
 end
 tEnd = toc(tStart);
 disp(['Total elapsed time over energies is ' num2str(tEnd) ' seconds.'])
 
-%% Ready results
-% load Si_DFT_e_array.mat;
-
 %% Histograms
 spec_se = cell(size(E0));
 spec_pe = cell(size(E0));
-coord_pe = cell(1,1);
-coord_se = cell(1,1);
+if numel(E0) == 1 && trackTrajectories
+    coord_pe = cell(1,1);
+    coord_pe_dead = cell(1,1);
+    coord_se = cell(1,1);
+    coord_se_dead = cell(1,1);
+end
 sey = zeros(size(E0));
 bse = zeros(size(E0));
 for i = 1:length(E0)
@@ -34,12 +38,22 @@ for i = 1:length(E0)
             if ~e{i}{j}(k).Inside && ~e{i}{j}(k).Dead
                 if e{i}{j}(k).isSecondary
                     spec_se{i}(end+1) = e{i}{j}(k).Energy;
-                    coord_se{end+1}(:,:) = e{i}{j}(k).coordinates;
+                    if numel(E0) == 1 && trackTrajectories
+                        coord_se{end+1}(:,:) = e{i}{j}(k).coordinates;
+                    end
                     sey(i) = sey(i) + 1;
                 else
                     spec_pe{i}(end+1) = e{i}{j}(k).Energy;
-                    coord_pe{end+1}(:,:) = e{i}{j}(k).coordinates;
+                    if numel(E0) == 1 && trackTrajectories
+                        coord_pe{end+1}(:,:) = e{i}{j}(k).coordinates;
+                    end
                     bse(i) = bse(i) + 1;
+                end
+            elseif e{i}{j}(k).Inside && e{i}{j}(k).Dead && numel(E0) == 1 && trackTrajectories
+                if e{i}{j}(k).isSecondary
+                    coord_se_dead{end+1}(:,:) = e{i}{j}(k).coordinates;
+                else
+                    coord_pe_dead{end+1}(:,:) = e{i}{j}(k).coordinates;
                 end
             end
         end
@@ -49,17 +63,78 @@ end
 
 
 %% Trajectories
+%{
 figure
+title([matname ' E_0 = ' num2str(E0) ' eV'])
 hold on
-for i = 2:length(coord_pe)
-    plot3(coord_pe{i}(:,1),coord_pe{i}(:,2),coord_pe{i}(:,3),Color='Blue')
-end
+box on
+colormap(turbo)
 
+% 3D
+%{
+% primaries
+for i = 2:length(coord_pe)    
+    patch([coord_pe{i}(:,1); nan],[coord_pe{i}(:,2); nan],[coord_pe{i}(:,3); nan],[coord_pe{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+% dead primaries
+for i = 2:length(coord_pe_dead)    
+    patch([coord_pe_dead{i}(:,1); nan],[coord_pe_dead{i}(:,2); nan],[coord_pe_dead{i}(:,3); nan],[coord_pe_dead{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+% secondaries
 for i = 2:length(coord_se)
-    plot3(real(coord_se{i}(:,1)),real(coord_se{i}(:,2)),real(coord_se{i}(:,3)),Color='Red')
+    patch([coord_se{i}(:,1); nan],[coord_se{i}(:,2); nan],[coord_se{i}(:,3); nan],[coord_se{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+% dead secondaries
+for i = 2:length(coord_se_dead)
+    patch([coord_se_dead{i}(:,1); nan],[coord_se_dead{i}(:,2); nan],[coord_se_dead{i}(:,3); nan],[coord_se_dead{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
 end
 
-scatter(0,0,150,Color='Black')
+colorbar
+view(3)
+
+scatter(0,0,50,'filled',Color='Black')
+set(gca,'Zdir','reverse')
+%}
+
+% 2D
+%{
+% primaries
+for i = 2:length(coord_pe)    
+    patch([coord_pe{i}(:,1); nan],[coord_pe{i}(:,3); nan],[coord_pe{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+% dead primaries
+%{
+for i = 2:length(coord_pe_dead)    
+    patch([coord_pe_dead{i}(:,1); nan],[coord_pe_dead{i}(:,3); nan],[coord_pe_dead{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+%}
+% secondaries
+for i = 2:length(coord_se)
+    patch([coord_se{i}(:,1); nan],[coord_se{i}(:,3); nan],[coord_se{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+% dead secondaries
+%{
+for i = 2:length(coord_se_dead)
+    patch([coord_se_dead{i}(:,1); nan],[coord_se_dead{i}(:,3); nan],[coord_se_dead{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')
+end
+%}
+
+scatter(0,0,50,'filled',Color='Black')
+set(gca,'Ydir','reverse')
+c = colorbar;
+ylabel(c,'Energy (eV)');
+xlabel('X (A)');
+ylabel('Z (A)')
+
+xl = xlim;
+yl = ylim;
+x = [xl(1) xl(2) xl(2) xl(1)];
+y = [0 0 yl(2) yl(2)];
+fill(x,y,'b','FaceAlpha',0.2)
+
+fontsize(20,'points')
+%}
+%}
 
 %% Yields
 %{

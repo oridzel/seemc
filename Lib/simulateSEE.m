@@ -1,6 +1,6 @@
-function e = simulateSEE(N_traj,E0,MatName,trackTrajectories)
+function e = simulateSEE(N_traj,E0,MatName,isMetal,trackTrajectories)
 
-    Mat = Sample(MatName,false);
+    Mat = Sample(MatName,isMetal);
     e = cell(N_traj,1);
     % parpool(2)
 
@@ -16,10 +16,8 @@ function e = simulateSEE(N_traj,E0,MatName,trackTrajectories)
                 if e{i}(e_count).Inside && ~e{i}(e_count).Dead
                     e{i}(e_count).getScatteringType;
                     if e{i}(e_count).scatter
-                        % if e(j).EnergyLoss + e(j).Material.MaterialData.Evb > e(j).InnerPotential
-                        if e{i}(e_count).EnergyLoss - e{i}(e_count).Material.MaterialData.Eg - e{i}(e_count).EnergySE > e{i}(e_count).Material.MaterialData.Affinity
-                            % e_se = e(j).EnergyLoss + e(j).Material.MaterialData.Evb;
-                            e_se = e{i}(e_count).EnergyLoss - e{i}(e_count).Material.MaterialData.Eg - e{i}(e_count).EnergySE;
+                        if e{i}(e_count).EnergyLoss + e{i}(e_count).EnergySE > e{i}(e_count).InnerPotential
+                            e_se = e{i}(e_count).EnergyLoss + e{i}(e_count).EnergySE;
                             uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
                                     sin(acos(2*rand-1))*sin(2*rand*pi),...
                                     cos(acos(2*rand-1)) ];
