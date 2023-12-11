@@ -1,13 +1,14 @@
 clear;
 
-N = 1000;
+run init.m
+
+N = 50;
 % E0 = [20:10:100 200 500 700 800 1000];
-E0 = [1500 2000 3000 5000];
-% E0 = 1000;
+E0 = 500;
 e = cell(length(E0),1);
-matname = 'Au';
-isMetal = true;
-trackTrajectories = false;
+matname = 'PMMA';
+isMetal = false;
+trackTrajectories = true;
 
 tStart = tic;
 for i = 1:length(E0)
@@ -63,7 +64,7 @@ end
 
 
 %% Trajectories
-%{
+% {
 figure
 title([matname ' E_0 = ' num2str(E0) ' eV'])
 hold on
@@ -97,7 +98,7 @@ set(gca,'Zdir','reverse')
 %}
 
 % 2D
-%{
+% {
 % primaries
 for i = 2:length(coord_pe)    
     patch([coord_pe{i}(:,1); nan],[coord_pe{i}(:,3); nan],[coord_pe{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')

@@ -43,14 +43,15 @@ classdef Sample
         end
 
         function [theta,dist] = getAngularIIMFP(obj,energy,eloss)
-            theta = linspace(0,pi/2,100);
-            energy = energy/h2ev;
+            theta = linspace(0,pi/2,100);            
             eloss = eloss/h2ev;
-            % q_squared = 4*(energy - obj.MaterialData.Eg/h2ev) - 2*eloss - ...
-            %     4*sqrt((energy - obj.MaterialData.Eg/h2ev)*(energy - obj.MaterialData.Eg/h2ev - eloss))*cos(theta);
+            if obj.isMetal
+                energy = energy/h2ev;
+            else
+                energy = (energy - obj.MaterialData.Eg)/h2ev;
+            end
             q_squared = 4*energy - 2*eloss - 4*sqrt(energy*(energy - eloss))*cos(theta);
             elf_int = interp2(obj.MaterialData.q*a0,obj.MaterialData.eloss/h2ev,obj.MaterialData.ELF,sqrt(q_squared),eloss);
-            % dist = 1./(pi^2*q_squared).*sqrt(1 - eloss/(energy - obj.MaterialData.Eg/h2ev)).*elf_int;
             dist = 1./(pi^2*q_squared).*sqrt(1 - eloss/energy).*elf_int;
         end
 

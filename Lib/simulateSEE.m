@@ -16,8 +16,8 @@ function e = simulateSEE(N_traj,E0,MatName,isMetal,trackTrajectories)
                 if e{i}(e_count).Inside && ~e{i}(e_count).Dead
                     e{i}(e_count).getScatteringType;
                     if e{i}(e_count).scatter
-                        if e{i}(e_count).EnergyLoss + e{i}(e_count).EnergySE > e{i}(e_count).InnerPotential
-                            e_se = e{i}(e_count).EnergyLoss + e{i}(e_count).EnergySE;
+                        e_se = e{i}(e_count).EnergyLoss + e{i}(e_count).EnergySE;
+                        if e_se > e{i}(e_count).InnerPotential
                             uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
                                     sin(acos(2*rand-1))*sin(2*rand*pi),...
                                     cos(acos(2*rand-1)) ];

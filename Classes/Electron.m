@@ -41,11 +41,7 @@ classdef Electron < handle
             end
             
             if ~obj.isSecondary
-                if obj.Material.isMetal
-                    obj.Energy = e + obj.InnerPotential;
-                else
-                    obj.Energy = e + obj.Material.MaterialData.Affinity;
-                end
+                obj.Energy = e + obj.InnerPotential;
             else
                 obj.Energy = e;
             end
@@ -118,7 +114,12 @@ classdef Electron < handle
                 end
                 obj.Energy = obj.Energy - obj.EnergyLoss;
                 obj.died;
-                if ~obj.Dead % && obj.Energy > obj.Material.MaterialData.Eg
+                if obj.Material.isMetal
+                    min_energy = 1;
+                else
+                    min_energy = obj.Material.MaterialData.Eg;
+                end
+                if ~obj.Dead && obj.Energy > min_energy
                     [theta, angdist] = obj.Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
                     cumang = cumtrapz(theta, angdist);
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
@@ -134,6 +135,7 @@ classdef Electron < handle
                 bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
                 obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
                 obj.Energy = obj.Energy - obj.Material.MaterialData.Phonon.eloss;
+                obj.died;
                 obj.updateDirection;
                 loss = false;
             end
@@ -142,7 +144,7 @@ classdef Electron < handle
             obj.dircos2ang;
             if obj.xyz(end) < 0
                 beta = pi - obj.Angles(1);
-                ecos = obj.Energy*cos(beta)^2;
+                ecos = obj.Energy*cos(beta)^2;             
                 if ecos > obj.InnerPotential
                     t = 4*sqrt(1 - obj.InnerPotential/ecos)/(1 + sqrt(1 - obj.InnerPotential/ecos))^2;
                 else
@@ -154,13 +156,11 @@ classdef Electron < handle
                     obj.xyz(2) = obj.xyz(2) + sin(beta)*sin(obj.Angles(2))*obj.xyz(end)/cos(beta);
                     obj.xyz(3) = 0;
                     obj.Angles(1) = pi - asin(sin(beta)*sqrt(obj.Energy/(obj.Energy-obj.InnerPotential)));
-                    if obj.Material.isMetal
-                        obj.Energy = obj.Energy - obj.InnerPotential;
-                    else
-                        obj.Energy = obj.Energy - obj.Material.MaterialData.Affinity;
-                    end
                     if obj.saveCoordinates
-                        obj.coordinates(end,:) = [obj.xyz,obj.Energy+obj.InnerPotential];
+                        obj.coordinates(end,:) = [obj.xyz,obj.Energy];
+                    end
+                    obj.Energy = obj.Energy - obj.InnerPotential;
+                    if obj.saveCoordinates
                         x = obj.xyz(1) + 100*sin(obj.Angles(1))*cos(obj.Angles(2));
                         y = obj.xyz(2) + 100*sin(obj.Angles(1))*sin(obj.Angles(2));
                         z = obj.xyz(3) + 100*cos(obj.Angles(1));
@@ -177,7 +177,6 @@ classdef Electron < handle
         end
         function died(obj)
             if obj.Energy < obj.InnerPotential
-            % if obj.Energy < obj.Material.MaterialData.Affinity
                 obj.Dead = true;
             end
         end
@@ -220,23 +219,23 @@ classdef Electron < handle
             xlabel('Theta (rad)')
         end
         function set.Energy(obj,val)
-            if val < 1
-                % disp('Energy is too low')
-                obj.Dead = true;
-            end
             obj.Energy = val;
         end
         function val = get.IIMFP(obj)
             val = 1/obj.Material.getIMFP(obj.Energy);
         end
         function val = get.IEMFP(obj)
-            val = 1/obj.Material.getEMFP(obj.Energy);
+            if obj.Material.isMetal
+                val = 1/obj.Material.getEMFP(obj.Energy);
+            else
+                val = 1/obj.Material.getEMFP(obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb);
+            end
         end
         function val = get.IPHMFP(obj)
             val = obj.Material.getIPHMFP(obj.Energy);
         end
         function val = get.ITMFP(obj)
-            val = obj.IIMFP + obj.IEMFP + obj.IPHMFP;
+            val = obj.IEMFP + obj.IPHMFP;
         end
     end
 end
