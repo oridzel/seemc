@@ -235,7 +235,7 @@ classdef Electron < handle
             val = obj.Material.getIPHMFP(obj.Energy);
         end
         function val = get.ITMFP(obj)
-            val = obj.IEMFP + obj.IPHMFP;
+            val = obj.IEMFP + obj.IIMFP + obj.IPHMFP;
         end
     end
 end

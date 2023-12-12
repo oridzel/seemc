@@ -28,18 +28,25 @@ classdef Sample
         function [eloss,diimfp] = getDIIMFP(obj,energy)
             idx = interp1(obj.MaterialData.DECS.E0,1:length(obj.MaterialData.DECS.E0),energy,'nearest');
             if energy > obj.MaterialData.DECS.E0(idx)
-                prob = log(energy/obj.MaterialData.DECS.E0(idx)) / log(obj.MaterialData.DECS.E0(idx+1)/obj.MaterialData.DECS.E0(idx));
-                if rand < prob
-                    idx = idx + 1;
-                end
+                de = (energy - obj.MaterialData.DECS.E0(idx)) / (obj.MaterialData.DECS.E0(idx+1) - obj.MaterialData.DECS.E0(idx));
+                diimfp = obj.MaterialData.DIIMFP(:,2,idx) + (obj.MaterialData.DIIMFP(:,2,idx+1) - obj.MaterialData.DIIMFP(:,2,idx))*de;
+                eloss = obj.MaterialData.DIIMFP(:,1,idx) + (obj.MaterialData.DIIMFP(:,1,idx+1) - obj.MaterialData.DIIMFP(:,1,idx))*de;
+                % prob = log(energy/obj.MaterialData.DECS.E0(idx)) / log(obj.MaterialData.DECS.E0(idx+1)/obj.MaterialData.DECS.E0(idx));
+                % if rand < prob
+                %     idx = idx + 1;
+                % end
             elseif energy < obj.MaterialData.DECS.E0(idx)
-                prob = log(obj.MaterialData.DECS.E0(idx)/energy) / log(obj.MaterialData.DECS.E0(idx)/obj.MaterialData.DECS.E0(idx-1));
-                if rand < prob
-                    idx = idx - 1;
-                end
+                de = (energy - obj.MaterialData.DECS.E0(idx-1)) / (obj.MaterialData.DECS.E0(idx) - obj.MaterialData.DECS.E0(idx-1));
+                diimfp = obj.MaterialData.DIIMFP(:,2,idx-1) + (obj.MaterialData.DIIMFP(:,2,idx) - obj.MaterialData.DIIMFP(:,2,idx-1))*de;
+                eloss = 1 + (obj.MaterialData.DIIMFP(:,1,idx) - obj.MaterialData.DIIMFP(:,1,idx-1))*de;
+                % prob = log(obj.MaterialData.DECS.E0(idx)/energy) / log(obj.MaterialData.DECS.E0(idx)/obj.MaterialData.DECS.E0(idx-1));
+                % if rand < prob
+                %     idx = idx - 1;
+                % end
+            else
+                eloss = obj.MaterialData.DIIMFP(:,1,idx);
+                diimfp = obj.MaterialData.DIIMFP(:,2,idx);
             end
-            eloss = obj.MaterialData.DIIMFP(:,1,idx);
-            diimfp = obj.MaterialData.DIIMFP(:,2,idx);
         end
 
         function [theta,dist] = getAngularIIMFP(obj,energy,eloss)

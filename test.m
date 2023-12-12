@@ -2,13 +2,13 @@ clear;
 
 run init.m
 
-N = 50;
+N = 10000;
 % E0 = [20:10:100 200 500 700 800 1000];
-E0 = 500;
+E0 = 100;
 e = cell(length(E0),1);
 matname = 'PMMA';
 isMetal = false;
-trackTrajectories = true;
+trackTrajectories = false;
 
 tStart = tic;
 for i = 1:length(E0)
@@ -61,10 +61,10 @@ for i = 1:length(E0)
     end
     disp([num2str(E0(i)) '  ' num2str((sey(i)+bse(i))/N)])
 end
-
+save([matname '_yields.mat'],"E0","bse","sey")
 
 %% Trajectories
-% {
+%{
 figure
 title([matname ' E_0 = ' num2str(E0) ' eV'])
 hold on
@@ -153,11 +153,12 @@ legend
 %}
 
 %% Spectra
-%{
+% {
 figure
 hold on
-histogram(spec_se{5},"NumBins",100)
-histogram(spec_pe{5},"NumBins",100)
+histogram(spec_pe{1},"NumBins",200,DisplayName="Primaries")
+histogram(spec_se{1},"NumBins",200,DisplayName="Secondaries")
 xlabel('Electron energy (eV)')
+legend
 %}
 
