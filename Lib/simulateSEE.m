@@ -21,7 +21,7 @@ function e = simulateSEE(N_traj,E0,MatName,isMetal,trackTrajectories)
                             uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
                                     sin(acos(2*rand-1))*sin(2*rand*pi),...
                                     cos(acos(2*rand-1)) ];
-                            e{i}(end + 1) = Electron(e_se,Mat,trackTrajectories,e{i}(e_count).xyz,uvw,e{i}(e_count).nSecondaries+1,true);
+                            e{i}(end + 1) = Electron(e_se,Mat,trackTrajectories,e{i}(e_count).xyz,uvw,e{i}(e_count).nSecondaries+1,true,e_count);
                             e{i}(e_count).nSecondaries = e{i}(e_count).nSecondaries + 1;
                         end
                     end
