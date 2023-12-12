@@ -13,6 +13,7 @@ classdef Electron < handle
         saveCoordinates = false
         isSecondary = false
         Generation = 1 % Primary electron
+        ParentIndex = 0 % Primary electron
         Inside = true
         Dead = false
         ScatteringType
@@ -26,7 +27,7 @@ classdef Electron < handle
         ITMFP
     end
     methods
-        function obj = Electron(e,mat,saveCoord,xyz,uvw,gen,se)
+        function obj = Electron(e,mat,saveCoord,xyz,uvw,gen,se,ind)
             obj.Material = mat;
             if obj.Material.isMetal
                 obj.InnerPotential = obj.Material.MaterialData.Ef + obj.Material.MaterialData.Wf;
@@ -38,6 +39,7 @@ classdef Electron < handle
                 obj.uvw = uvw;
                 obj.Generation = gen;
                 obj.isSecondary = se;
+                obj.ParentIndex = ind;
             end
             
             if ~obj.isSecondary
