@@ -2,14 +2,14 @@ clear;
 
 run init.m
 
-N = 100000;
+N = 100;
 % E0 = [20:10:100 200 500 700 800 1000];
 E0 = 100;
 e = cell(length(E0),1);
 matname = 'Au';
 isMetal = true;
 trackTrajectories = false;
-coincidences = true;
+coincidences = false;
 
 tStart = tic;
 for i = 1:length(E0)
@@ -115,7 +115,7 @@ set(gca,'Zdir','reverse')
 %}
 
 % 2D
-% {
+%{
 % primaries
 for i = 2:length(coord_pe)    
     patch([coord_pe{i}(:,1); nan],[coord_pe{i}(:,3); nan],[coord_pe{i}(:,4); nan],'FaceColor','none','EdgeColor','interp')

@@ -20,15 +20,20 @@ classdef SEEMC < handle
         end
         function simulate(obj)
             obj.statistics = cell(1);
-            for e = 1:numel(obj.energy)
-                disp(obj.energy(e))
-                tic
+            n = obj.numTrajectories;
+            energy_array = obj.energy;
+            s = obj.sample;
+            track = obj.trackTrajectories;
+            stat = cell(numel(energy_array));
+            parfor e = 1:numel(energy_array)
+                disp(energy_array(e))
                 x = cell(1);              
-                for i = 1:obj.numTrajectories
+                for i = 1:n
                     e_count = 0;
                     res = Electron.empty;
-                    res(end+1) = Electron(obj.energy(e),obj.sample,obj.trackTrajectories);
-                    while e_count < length(res)           
+                    res(end+1) = Electron(energy_array(e),s,track);
+                    while e_count < length(res)
+                        y = struct;
                         e_count = e_count + 1;
                         while res(e_count).Inside && ~res(e_count).Dead
                             res(e_count).travel;
@@ -41,29 +46,30 @@ classdef SEEMC < handle
                                         uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
                                                 sin(acos(2*rand-1))*sin(2*rand*pi),...
                                                 cos(acos(2*rand-1)) ];
-                                        res(end + 1) = Electron(e_se,obj.sample,obj.trackTrajectories,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
+                                        res(end + 1) = Electron(e_se,s,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
                                         res(e_count).nSecondaries = res(e_count).nSecondaries + 1;
                                     end
                                 end
                             end            
                         end
                         if ~res(e_count).Dead && ~res(e_count).Inside
-                            x{end+1}.Energy = res(e_count).Energy;
-                            x{end+1}.EnergyLoss = res(e_count).EnergyLoss;
-                            x{end+1}.EnergySE = res(e_count).EnergySE;
-                            x{end+1}.Angles = res(e_count).Angles;
-                            x{end+1}.isSecondary = res(e_count).isSecondary;
-                            x{end+1}.Generation = res(e_count).Generation;
-                            x{end+1}.ParentIndex = res(e_count).ParentIndex;
-                            if obj.trackTrajectories
-                                x{end+1}.coordinates = res(e_count).coordinates;
+                            y.Energy = res(e_count).Energy;
+                            y.EnergyLoss = res(e_count).EnergyLoss;
+                            y.EnergySE = res(e_count).EnergySE;
+                            y.Angles = res(e_count).Angles;
+                            y.isSecondary = res(e_count).isSecondary;
+                            y.Generation = res(e_count).Generation;
+                            y.ParentIndex = res(e_count).ParentIndex;
+                            if track
+                                y.coordinates = res(e_count).coordinates;
                             end
+                            x{end+1} = y;
                         end
                     end
                 end
-                obj.statistics{e} = x;
-                toc
+                stat{e} = x;
             end
+            obj.statistics = stat;
         end
     end
 end
