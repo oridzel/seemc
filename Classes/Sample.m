@@ -26,26 +26,13 @@ classdef Sample
         end
 
         function [eloss,diimfp] = getDIIMFP(obj,energy)
-            idx = interp1(obj.MaterialData.DECS.E0,1:length(obj.MaterialData.DECS.E0),energy,'nearest');
-            if energy > obj.MaterialData.DECS.E0(idx)
-                de = (energy - obj.MaterialData.DECS.E0(idx)) / (obj.MaterialData.DECS.E0(idx+1) - obj.MaterialData.DECS.E0(idx));
-                diimfp = obj.MaterialData.DIIMFP(:,2,idx) + (obj.MaterialData.DIIMFP(:,2,idx+1) - obj.MaterialData.DIIMFP(:,2,idx))*de;
-                eloss = obj.MaterialData.DIIMFP(:,1,idx) + (obj.MaterialData.DIIMFP(:,1,idx+1) - obj.MaterialData.DIIMFP(:,1,idx))*de;
-                % prob = log(energy/obj.MaterialData.DECS.E0(idx)) / log(obj.MaterialData.DECS.E0(idx+1)/obj.MaterialData.DECS.E0(idx));
-                % if rand < prob
-                %     idx = idx + 1;
-                % end
-            elseif energy < obj.MaterialData.DECS.E0(idx)
-                de = (energy - obj.MaterialData.DECS.E0(idx-1)) / (obj.MaterialData.DECS.E0(idx) - obj.MaterialData.DECS.E0(idx-1));
-                diimfp = obj.MaterialData.DIIMFP(:,2,idx-1) + (obj.MaterialData.DIIMFP(:,2,idx) - obj.MaterialData.DIIMFP(:,2,idx-1))*de;
-                eloss = 1 + (obj.MaterialData.DIIMFP(:,1,idx) - obj.MaterialData.DIIMFP(:,1,idx-1))*de;
-                % prob = log(obj.MaterialData.DECS.E0(idx)/energy) / log(obj.MaterialData.DECS.E0(idx)/obj.MaterialData.DECS.E0(idx-1));
-                % if rand < prob
-                %     idx = idx - 1;
-                % end
+            diimfp = interp1(obj.MaterialData.DECS.E0,squeeze(obj.MaterialData.DIIMFP(:,2,:))',energy);
+            if obj.isMetal
+                energy = energy - obj.MaterialData.Ef;
+                eloss = eps:(energy-eps)/(length(obj.MaterialData.DIIMFP(:,1,1))-1):energy;
             else
-                eloss = obj.MaterialData.DIIMFP(:,1,idx);
-                diimfp = obj.MaterialData.DIIMFP(:,2,idx);
+                energy = energy - obj.MaterialData.Eg - obj.MaterialData.Evb;
+                eloss = obj.MaterialData.Eg:(energy-obj.MaterialData.Eg)/(length(obj.MaterialData.DIIMFP(:,1,1))-1):energy;
             end
         end
 

@@ -2,12 +2,12 @@ clear;
 
 run init.m
 
-N = 10000;
+N = 1000;
 % E0 = [20:10:100 200 500 700 800 1000];
 E0 = 100;
 e = cell(length(E0),1);
-matname = 'PMMA';
-isMetal = false;
+matname = 'Au';
+isMetal = true;
 trackTrajectories = false;
 
 tStart = tic;
