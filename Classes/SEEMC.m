@@ -13,6 +13,7 @@ classdef SEEMC < handle
         energyHistogramPE
         energyHistogramSE
         coincidenceHistogram
+        coordinateArray
     end
     methods
         function obj = SEEMC(inputpar)
@@ -74,7 +75,7 @@ classdef SEEMC < handle
                             y.Dead = res(e_count).Dead;
                             y.Inside = res(e_count).Inside;
                             if track
-                                y.coordinates = res(e_count).coordinates;
+                                y.Coordinates = res(e_count).coordinates;
                             end
                             electronData{i}(end+1) = y;
                         elseif ~saveEscaped
@@ -89,7 +90,7 @@ classdef SEEMC < handle
                             y.Dead = res(e_count).Dead;
                             y.Inside = res(e_count).Inside;
                             if track
-                                y.coordinates = res(e_count).coordinates;
+                                y.Coordinates = res(e_count).coordinates;
                             end
                             electronData{i}(end+1) = y;
                         end
@@ -184,5 +185,71 @@ classdef SEEMC < handle
             fontsize(20,"points")
             title(obj.matName)
         end
+
+        function getTrajectories(obj)
+            if ~obj.trackTrajectories
+                error('The trajectories were not tracked.')
+            end
+            obj.coordinateArray = cell(numel(obj.energyArray));
+            for i = 1:numel(obj.energyArray)
+                temp = cell(1,1);
+                for j = 1:obj.numTrajectories                 
+                    for k = 1:length(obj.statistics{i}{j})
+                        temp{end+1}(:,:) = [obj.statistics{i}{j}(k).Coordinates repmat(obj.statistics{i}{j}(k).Generation,size(obj.statistics{i}{j}(k).Coordinates,1),1)];
+                    end
+                end
+                obj.coordinateArray{i} = temp;
+            end
+        end
+
+        function plotTrajectories(obj,ind)
+            figure
+            title([obj.matName ' E_0 = ' num2str(obj.energyArray(ind)) ' eV'])
+            hold on
+            box on
+            colormap(turbo)
+            for i = 2:length(obj.coordinateArray{ind})    
+                patch([obj.coordinateArray{ind}{i}(:,1); nan],[obj.coordinateArray{ind}{i}(:,3); nan],[obj.coordinateArray{ind}{i}(:,4); nan],'FaceColor','none','EdgeColor','flat') %,'Marker','o','MarkerFaceColor','flat')
+            end
+            scatter(0,0,50,'filled','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0])
+            set(gca,'Ydir','reverse')
+            c = colorbar;
+            ylabel(c,'Energy (eV)');
+            xlabel('X (A)');
+            ylabel('Z (A)')
+            
+            xl = xlim;
+            yl = ylim;
+            x = [xl(1) xl(2) xl(2) xl(1)];
+            y = [0 0 yl(2) yl(2)];
+            fill(x,y,'b','FaceAlpha',0.2)
+            
+            fontsize(20,'points')
+
+            figure
+            title([obj.matName ' E_0 = ' num2str(obj.energyArray(ind)) ' eV'])
+            hold on
+            box on
+            for i = 2:length(obj.coordinateArray{ind})    
+                patch([obj.coordinateArray{ind}{i}(:,1); nan],[obj.coordinateArray{ind}{i}(:,3); nan],[obj.coordinateArray{ind}{i}(:,5); nan],'FaceColor','none','EdgeColor','flat') %,'Marker','o','MarkerFaceColor','flat')
+            end
+            scatter(0,0,50,'filled','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0])
+            set(gca,'Ydir','reverse')
+            c = colorbar; 
+            ylabel(c,'Electron generation');
+            cm = lines(c.Limits(2));
+            colormap(cm)
+            xlabel('X (A)');
+            ylabel('Z (A)')
+            
+            xl = xlim;
+            yl = ylim;
+            x = [xl(1) xl(2) xl(2) xl(1)];
+            y = [0 0 yl(2) yl(2)];
+            fill(x,y,'b','FaceAlpha',0.2)
+            
+            fontsize(20,'points')
+        end
+
     end
 end

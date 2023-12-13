@@ -12,8 +12,8 @@ classdef Electron < handle
         coordinates
         saveCoordinates = false
         isSecondary = false
-        Generation = 1 % Primary electron
-        ParentIndex = 1 % Primary electron
+        Generation = 0 % Primary electron
+        ParentIndex = 0 % Primary electron
         Inside = true
         Dead = false
         ScatteringType
@@ -183,9 +183,11 @@ classdef Electron < handle
             end
         end
         function testDECSsampling(obj)
+            n = 10000
+            angle = zeros(n)
             decs = obj.Material.getDECS(obj.Energy);
             cumdecs = cumtrapz(obj.Material.MaterialData.DECS.x,decs);
-            for i = 1:100000
+            for i = 1:n
                 angle(i) = interp1(cumdecs,obj.Material.MaterialData.DECS.x,rand);
             end
             figure
@@ -195,10 +197,12 @@ classdef Electron < handle
             xlabel('Angle (rad)')
         end
         function testDIIMFPsampling(obj)
+            n = 10000
+            loss = zeros(n)
             [eloss,diimfp] = obj.Material.getDIIMFP(obj.Energy);
             cumdiimfp = cumtrapz(eloss,diimfp);
             cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
-            for i = 1:100000
+            for i = 1:n
                 loss(i) = interp1(cumdiimfp,eloss,rand);
             end
             figure
@@ -208,7 +212,9 @@ classdef Electron < handle
             xlabel('Energy loss (eV)')
         end
         function testAngIIMFPsampling(obj)
-            for i = 1:10000
+            n = 10000
+            ang = zeros(n)
+            for i = 1:n
                 [theta, angdist] = obj.Material.getAngularIIMFP(500,20);
                 cumang = cumtrapz(theta, angdist);
                 cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
