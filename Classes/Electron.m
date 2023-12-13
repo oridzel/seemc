@@ -234,7 +234,11 @@ classdef Electron < handle
             end
         end
         function val = get.IPHMFP(obj)
-            val = obj.Material.getIPHMFP(obj.Energy);
+            if ~obj.Material.isMetal
+                val = obj.Material.getIPHMFP(obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb);
+            else
+                val = 0;
+            end
         end
         function val = get.ITMFP(obj)
             val = obj.IEMFP + obj.IIMFP + obj.IPHMFP;
