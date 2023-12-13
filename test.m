@@ -38,8 +38,6 @@ end
 sey = zeros(size(E0));
 bse = zeros(size(E0));
 for i = 1:length(E0)
-    bse(i) = 0;
-    sey(i) = 0;
     for j = 1:N
         for k = 1:length(e{i}{j})
             if ~e{i}{j}(k).Inside && ~e{i}{j}(k).Dead

@@ -13,7 +13,7 @@ classdef Electron < handle
         saveCoordinates = false
         isSecondary = false
         Generation = 1 % Primary electron
-        ParentIndex = 0 % Primary electron
+        ParentIndex = 1 % Primary electron
         Inside = true
         Dead = false
         ScatteringType

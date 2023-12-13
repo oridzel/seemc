@@ -8,6 +8,11 @@ classdef SEEMC < handle
         sample
         statistics
         onlyEscaped = true
+        bse
+        sey
+        energyHistogramPE
+        energyHistogramSE
+        coincidenceHistogram
     end
     methods
         function obj = SEEMC(inputpar)
@@ -16,7 +21,7 @@ classdef SEEMC < handle
             obj.numTrajectories = inputpar.numTrajectories;
             obj.trackTrajectories = inputpar.trackTrajectories;
             obj.energyArray = inputpar.energy;
-
+            obj.onlyEscaped = inputpar.onlyEscaped;
             obj.sample = Sample(obj.matName,obj.isMetal);
         end
         function simulate(obj)
@@ -66,6 +71,8 @@ classdef SEEMC < handle
                             y.isSecondary = res(e_count).isSecondary;
                             y.Generation = res(e_count).Generation;
                             y.ParentIndex = res(e_count).ParentIndex;
+                            y.Dead = res(e_count).Dead;
+                            y.Inside = res(e_count).Inside;
                             if track
                                 y.coordinates = res(e_count).coordinates;
                             end
@@ -79,6 +86,8 @@ classdef SEEMC < handle
                             y.isSecondary = res(e_count).isSecondary;
                             y.Generation = res(e_count).Generation;
                             y.ParentIndex = res(e_count).ParentIndex;
+                            y.Dead = res(e_count).Dead;
+                            y.Inside = res(e_count).Inside;
                             if track
                                 y.coordinates = res(e_count).coordinates;
                             end
@@ -89,6 +98,91 @@ classdef SEEMC < handle
                 stat{e} = electronData;
             end
             obj.statistics = stat;
+        end
+
+        function calculateYields(obj)
+            obj.sey = zeros(size(obj.energyArray));
+            obj.bse = zeros(size(obj.energyArray));
+            for i = 1:numel(obj.energyArray)
+                for j = 1:obj.numTrajectories
+                    for k = 1:length(obj.statistics{i}{j})
+                        if ~obj.statistics{i}{j}(k).Inside && ~obj.statistics{i}{j}(k).Dead
+                            if obj.statistics{i}{j}(k).isSecondary
+                                obj.sey(i) = obj.sey(i) + 1;
+                            else
+                                obj.bse(i) = obj.bse(i) + 1;
+                            end
+                        end
+                    end
+                end
+            end
+            obj.sey = obj.sey/obj.numTrajectories;
+            obj.bse = obj.bse/obj.numTrajectories;
+        end
+
+        function calculateEnergyHistograms(obj)
+            obj.energyHistogramPE = cell(numel(obj.energyArray),1);
+            obj.energyHistogramSE = cell(numel(obj.energyArray),1);
+            for i = 1:numel(obj.energyArray)
+                for j = 1:obj.numTrajectories
+                    for k = 1:length(obj.statistics{i}{j})
+                        if ~obj.statistics{i}{j}(k).Inside && ~obj.statistics{i}{j}(k).Dead
+                            if obj.statistics{i}{j}(k).isSecondary
+                                obj.energyHistogramSE{i}(end+1) = obj.statistics{i}{j}(k).Energy;
+                            else
+                                obj.energyHistogramPE{i}(end+1) = obj.statistics{i}{j}(k).Energy;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        function plotEnergyDistribution(obj,ind)
+            figure
+            hold on
+            box on
+            histogram(obj.energyHistogramPE{ind},200,DisplayName='Primaries')
+            histogram(obj.energyHistogramSE{ind},200,DisplayName='Secondaries')
+            xlabel('Electron energy (eV)')
+            ylabel('Counts')
+            fontsize(20,"points")
+            title(obj.matName)
+            legend
+        end
+
+        function calculateCoincidenceHistogram(obj)
+            if obj.onlyEscaped
+                error('For coincidence histogram all electron trajectories must be stored.')
+            end
+            obj.coincidenceHistogram = cell(numel(obj.energyArray),1);
+            for i = 1:numel(obj.energyArray)
+                for j = 1:obj.numTrajectories
+                    for k = 1:length(obj.statistics{i}{j})
+                        if ~obj.statistics{i}{j}(k).Dead && obj.statistics{i}{j}(k).isSecondary
+                            if ~obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Dead && ...
+                                    obj.statistics{i}{j}(k).Energy + obj.statistics{i}{j}(k).InnerPotential == ...
+                                    obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).EnergyLoss + obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).EnergySE
+                                obj.coincidenceHistogram{i}(end+1,:) = [obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Energy obj.statistics{i}{j}(k).Energy];
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        function plotCoincidenceHistogram(obj,ind)
+            figure
+            hold on
+            box on
+            histogram2(obj.coincidenceHistogram{ind}(:,1),obj.coincidenceHistogram{ind}(:,2),50,'FaceColor','flat')
+            xlabel('Electron energy (eV)')
+            ylabel('Electron energy (eV)')
+            xlim([0,obj.energyArray(ind)])
+            colormap('turbo')
+            colorbar
+            fontsize(20,"points")
+            title(obj.matName)
         end
     end
 end

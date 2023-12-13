@@ -2,9 +2,10 @@ clear
 
 inputpar.matName = 'Au';
 inputpar.isMetal = true;
-inputpar.numTrajectories = 100;
+inputpar.numTrajectories = 10000;
 inputpar.trackTrajectories = false;
-inputpar.energy = [100 102 105 110];
+inputpar.energy = 100;
+inputpar.onlyEscaped = false;
 
 tic
 s = SEEMC(inputpar);
