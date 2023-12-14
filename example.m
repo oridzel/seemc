@@ -1,11 +1,11 @@
 clear
 
-inputpar.matName = 'Au';
-inputpar.isMetal = true;
-inputpar.numTrajectories = 50;
-inputpar.trackTrajectories = true;
-inputpar.energy = [100 500];
-inputpar.onlyEscaped = false;
+inputpar.matName = 'Si_DFT_b1l1';
+inputpar.isMetal = false;
+inputpar.numTrajectories = 1000;
+inputpar.trackTrajectories = false;
+inputpar.energy = 100;
+inputpar.onlyEscaped = true;
 
 tic
 s = SEEMC(inputpar);

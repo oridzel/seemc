@@ -127,19 +127,27 @@ classdef Electron < handle
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                     if isfinite(cumang)
                         obj.Deflection(1) = interp1(cumang,theta,rand);
-                        obj.updateDirection;
+                        if isreal(obj.Deflection)
+                            obj.updateDirection;
+                        end
                     end
                 end
             else
                 rn = rand;
                 e = obj.Energy/h2ev;
                 de = obj.Material.MaterialData.Phonon.eloss/h2ev;
-                bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
-                obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
-                obj.Energy = obj.Energy - obj.Material.MaterialData.Phonon.eloss;
-                obj.died;
-                obj.updateDirection;
-                loss = false;
+                if e - de > 0
+                    bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
+                    obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
+                    obj.Energy = obj.Energy - obj.Material.MaterialData.Phonon.eloss;
+                    obj.died;
+                    if ~obj.Dead && isreal(obj.Deflection)
+                        obj.updateDirection;
+                    end
+                    loss = false;
+                else
+                    obj.Dead = true;
+                end
             end
         end
         function escape(obj)

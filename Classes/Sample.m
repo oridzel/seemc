@@ -5,7 +5,7 @@ classdef Sample
     end
     properties (Constant)
         kbt = 9.445e-4
-    end
+    end    
     properties
         MaterialData
     end

@@ -121,6 +121,20 @@ classdef SEEMC < handle
             obj.bse = obj.bse/obj.numTrajectories;
         end
 
+        function plotYields(obj)
+            figure
+            hold on
+            box on
+            plot(obj.energyArray,obj.sey+obj.bse,DisplayName='TEY',LineWidth=2)
+            plot(obj.energyArray,obj.sey,DisplayName='SEY',LineWidth=2)
+            plot(obj.energyArray,obj.bse,DisplayName='BSE',LineWidth=2)
+            xlabel('Energy (eV)')
+            ylabel('Yield')
+            fontsize(20,"points")
+            title(obj.matName)
+            legend
+        end
+
         function calculateEnergyHistograms(obj)
             obj.energyHistogramPE = cell(numel(obj.energyArray),1);
             obj.energyHistogramSE = cell(numel(obj.energyArray),1);
