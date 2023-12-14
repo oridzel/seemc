@@ -39,7 +39,7 @@ classdef SEEMC < handle
                 energy = energy_array(e);
                 disp(energy)
                 electronData = cell(n_traj,1);            
-                for i = 1:n_traj
+                parfor i = 1:n_traj
                     e_count = 0;
                     res = Electron.empty;
                     res(end+1) = Electron(energy,smpl,track);
