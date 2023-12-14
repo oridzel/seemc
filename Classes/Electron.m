@@ -67,8 +67,13 @@ classdef Electron < handle
             end
         end
         function dircos2ang(obj)
-            obj.Angles(1) = acos(obj.uvw(3));
-            obj.Angles(2) = atan2(obj.uvw(2),obj.uvw(1));
+            if ~isreal(obj.uvw)
+                disp(obj)
+                obj.Dead = true;
+            else
+                obj.Angles(1) = acos(obj.uvw(3));
+                obj.Angles(2) = atan2(obj.uvw(2),obj.uvw(1));
+            end
         end
         function updateDirection(obj)
             theta0 = acos(obj.uvw(end));
@@ -127,21 +132,21 @@ classdef Electron < handle
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                     if isfinite(cumang)
                         obj.Deflection(1) = interp1(cumang,theta,rand);
-                        if isreal(obj.Deflection)
+                        if isreal(obj.Deflection(1))
                             obj.updateDirection;
                         end
                     end
                 end
             else
                 rn = rand;
-                e = obj.Energy/h2ev;
+                e = (obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb)/h2ev;
                 de = obj.Material.MaterialData.Phonon.eloss/h2ev;
                 if e - de > 0
                     bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
                     obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
                     obj.Energy = obj.Energy - obj.Material.MaterialData.Phonon.eloss;
                     obj.died;
-                    if ~obj.Dead && isreal(obj.Deflection)
+                    if ~obj.Dead && isreal(obj.Deflection(1))
                         obj.updateDirection;
                     end
                     loss = false;
@@ -152,35 +157,37 @@ classdef Electron < handle
         end
         function escape(obj)
             obj.dircos2ang;
-            if obj.xyz(end) < 0
-                beta = pi - obj.Angles(1);
-                ecos = obj.Energy*cos(beta)^2;             
-                if ecos > obj.InnerPotential
-                    t = 4*sqrt(1 - obj.InnerPotential/ecos)/(1 + sqrt(1 - obj.InnerPotential/ecos))^2;
-                else
-                    t = 0;
-                end
-                if rand < t
-                    obj.Inside = false;
-                    obj.xyz(1) = obj.xyz(1) + sin(beta)*cos(obj.Angles(2))*obj.xyz(end)/cos(beta);
-                    obj.xyz(2) = obj.xyz(2) + sin(beta)*sin(obj.Angles(2))*obj.xyz(end)/cos(beta);
-                    obj.xyz(3) = 0;
-                    obj.Angles(1) = pi - asin(sin(beta)*sqrt(obj.Energy/(obj.Energy-obj.InnerPotential)));
-                    if obj.saveCoordinates
-                        obj.coordinates(end,:) = [obj.xyz,obj.Energy];
+            if ~obj.Dead
+                if obj.xyz(end) < 0
+                    beta = pi - obj.Angles(1);
+                    ecos = obj.Energy*cos(beta)^2;             
+                    if ecos > obj.InnerPotential
+                        t = 4*sqrt(1 - obj.InnerPotential/ecos)/(1 + sqrt(1 - obj.InnerPotential/ecos))^2;
+                    else
+                        t = 0;
                     end
-                    obj.Energy = obj.Energy - obj.InnerPotential;
-                    if obj.saveCoordinates
-                        x = obj.xyz(1) + 100*sin(obj.Angles(1))*cos(obj.Angles(2));
-                        y = obj.xyz(2) + 100*sin(obj.Angles(1))*sin(obj.Angles(2));
-                        z = obj.xyz(3) + 100*cos(obj.Angles(1));
-                        obj.coordinates(end+1,:) = [x,y,z,obj.Energy];
-                    end
-                else
-                    obj.uvw(end) = -1*obj.uvw(end);
-                    obj.xyz(end) = -1*obj.xyz(end);
-                    if obj.saveCoordinates
-                        obj.coordinates(end,:) = [obj.xyz(1),obj.xyz(2),-obj.xyz(3),obj.Energy];
+                    if rand < t
+                        obj.Inside = false;
+                        obj.xyz(1) = obj.xyz(1) + sin(beta)*cos(obj.Angles(2))*obj.xyz(end)/cos(beta);
+                        obj.xyz(2) = obj.xyz(2) + sin(beta)*sin(obj.Angles(2))*obj.xyz(end)/cos(beta);
+                        obj.xyz(3) = 0;
+                        obj.Angles(1) = pi - asin(sin(beta)*sqrt(obj.Energy/(obj.Energy-obj.InnerPotential)));
+                        if obj.saveCoordinates
+                            obj.coordinates(end,:) = [obj.xyz,obj.Energy];
+                        end
+                        obj.Energy = obj.Energy - obj.InnerPotential;
+                        if obj.saveCoordinates
+                            x = obj.xyz(1) + 100*sin(obj.Angles(1))*cos(obj.Angles(2));
+                            y = obj.xyz(2) + 100*sin(obj.Angles(1))*sin(obj.Angles(2));
+                            z = obj.xyz(3) + 100*cos(obj.Angles(1));
+                            obj.coordinates(end+1,:) = [x,y,z,obj.Energy];
+                        end
+                    else
+                        obj.uvw(end) = -1*obj.uvw(end);
+                        obj.xyz(end) = -1*obj.xyz(end);
+                        if obj.saveCoordinates
+                            obj.coordinates(end,:) = [obj.xyz(1),obj.xyz(2),-obj.xyz(3),obj.Energy];
+                        end
                     end
                 end
             end
@@ -191,8 +198,8 @@ classdef Electron < handle
             end
         end
         function testDECSsampling(obj)
-            n = 10000
-            angle = zeros(n)
+            n = 10000;
+            angle = zeros(n);
             decs = obj.Material.getDECS(obj.Energy);
             cumdecs = cumtrapz(obj.Material.MaterialData.DECS.x,decs);
             for i = 1:n
@@ -205,8 +212,8 @@ classdef Electron < handle
             xlabel('Angle (rad)')
         end
         function testDIIMFPsampling(obj)
-            n = 10000
-            loss = zeros(n)
+            n = 10000;
+            loss = zeros(n);
             [eloss,diimfp] = obj.Material.getDIIMFP(obj.Energy);
             cumdiimfp = cumtrapz(eloss,diimfp);
             cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
@@ -220,8 +227,8 @@ classdef Electron < handle
             xlabel('Energy loss (eV)')
         end
         function testAngIIMFPsampling(obj)
-            n = 10000
-            ang = zeros(n)
+            n = 10000;
+            ang = zeros(n);
             for i = 1:n
                 [theta, angdist] = obj.Material.getAngularIIMFP(500,20);
                 cumang = cumtrapz(theta, angdist);

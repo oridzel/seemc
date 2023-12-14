@@ -1,10 +1,10 @@
 clear
 
-inputpar.matName = 'Si_DFT_b1l1';
+inputpar.matName = 'PMMA';
 inputpar.isMetal = false;
-inputpar.numTrajectories = 1000;
+inputpar.numTrajectories = 10000;
 inputpar.trackTrajectories = false;
-inputpar.energy = 100;
+inputpar.energy = 70;
 inputpar.onlyEscaped = true;
 
 tic
