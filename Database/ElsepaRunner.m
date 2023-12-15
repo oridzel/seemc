@@ -30,8 +30,11 @@ classdef ElsepaRunner
                 fclose(fid);
 
                 cd(dir_Elsepa);
-                system('elsepa < lub.in');
-                % system('./elsepa < lub.in');
+                if ispc
+                    system('elsepa < lub.in');
+                elseif ismac || isunix
+                    system('./elsepa < lub.in');
+                end
                     
                 DELIMITER = ' ';
             

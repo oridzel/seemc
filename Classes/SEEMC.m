@@ -153,12 +153,15 @@ classdef SEEMC < handle
             end
         end
 
-        function plotEnergyDistribution(obj,ind)
+        function plotEnergyDistribution(obj,ind,nbins,varargin)
+            if nargin < 3
+                nbins = 200;
+            end
             figure
             hold on
             box on
-            histogram(obj.energyHistogramPE{ind},200,DisplayName='Primaries')
-            histogram(obj.energyHistogramSE{ind},200,DisplayName='Secondaries')
+            histogram(obj.energyHistogramPE{ind},nbins,DisplayName='Primaries')
+            histogram(obj.energyHistogramSE{ind},nbins,DisplayName='Secondaries')
             xlabel('Electron energy (eV)')
             ylabel('Counts')
             fontsize(20,"points")
