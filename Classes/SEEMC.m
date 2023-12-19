@@ -186,11 +186,11 @@ classdef SEEMC < handle
             end
         end
 
-        function plotCoincidenceHistogram(obj,ind)
+        function plotCoincidenceHistogram(obj,ind,nbins)
             figure
             hold on
             box on
-            histogram2(obj.coincidenceHistogram{ind}(:,1),obj.coincidenceHistogram{ind}(:,2),50,'FaceColor','flat')
+            histogram2(obj.coincidenceHistogram{ind}(:,1),obj.coincidenceHistogram{ind}(:,2),200,'FaceColor','flat')
             xlabel('Electron energy (eV)')
             ylabel('Electron energy (eV)')
             xlim([0,obj.energyArray(ind)])
@@ -198,6 +198,12 @@ classdef SEEMC < handle
             colorbar
             fontsize(20,"points")
             title(obj.matName)
+	    savefig([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.fig'])
+
+	    set(gcf,'Units','inches');
+		screenposition = get(gcf,'Position');
+		set(gcf,'PaperPosition',[0 0 screenposition(3:4)],'PaperSize',[screenposition(3:4)]);
+		print -dpdf -painters test
         end
 
         function getTrajectories(obj)
