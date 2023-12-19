@@ -52,8 +52,13 @@ osc.egap = Si_DFT_b1l1.Eg;
 
 current_full_path = dbstack('-completenames');
 current_file_name = dbstack;
-ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
-dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
+if ispc
+    ind = strfind(current_full_path(1).file,['Database\' current_file_name(1).file]);
+    dirData = [current_full_path(1).file(1:ind-2) filesep 'Data\'];
+elseif ismac || isunix
+    ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
+    dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
+end
 load([dirData 'elf_si_dft_ocean_0_01_b1l1.mat'])
 Si_DFT_b1l1.ELF = elf;
 Si_DFT_b1l1.eloss = omega;
@@ -66,7 +71,7 @@ for i = 1:length(E0)
         energy = E0(i) - Si_DFT_b1l1.Eg - Si_DFT_b1l1.Evb;
         osc.eloss = Si_DFT_b1l1.Eg:(energy-Si_DFT_b1l1.Eg)/(N-1):energy;
         Si_DFT_b1l1.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Si_DFT_b1l1.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, Si_DFT_b1l1.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i),elf,q,omega);
         Si_DFT_b1l1.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Si_DFT_b1l1.l_in(i) = Inf;

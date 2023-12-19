@@ -13,11 +13,11 @@ ub = structToVec(osc_max);
 
 %% LSQ fitting (local minimum search)
 
-options = optimoptions('lsqcurvefit','OptimalityTolerance', 1e-16, 'FunctionTolerance', 1e-16,'PlotFcn',@optimplotx,'Display','iter-detailed','UseParallel',true);
-options.FunctionTolerance = 1.000000e-12;
-options.OptimalityTolerance = 1.000000e-12;
+options = optimoptions('lsqcurvefit','PlotFcn',@optimplotx,'Display','iter-detailed','UseParallel',true);
+options.FunctionTolerance = 1.000000e-8;
+options.OptimalityTolerance = 1.000000e-8;
 options.MaxFunctionEvaluations = 7000;
-options.StepTolerance = 1e-12;
+options.StepTolerance = 1e-8;
 pars = structToVec(osc);
 x_res = lsqcurvefit(@fit_func, pars, x_exp, y_exp, lb, ub, options);
 
@@ -119,15 +119,15 @@ function eps = eps_real_Drude(o)
     q = o.qtran;
     eps_re = o.beps;
     for j=1:length(o.A)
-        [epsDrud_re, epsDrud_im] = Drude(q,w,o.Om(j),o.G(j),o.alpha,o.Ef);
+        [epsDrud_re, ~] = Drude(q,w,o.Om(j),o.G(j),o.alpha,o.Ef);
         eps_re = eps_re - o.A(j)*epsDrud_re;
     end
     eps = eps_re;
 end
 
-function y = fit_func(x,xdata)
+function y = fit_func(x,~)
     o = vecToStruct(x);
-%     o = scaling(o);
+    o = scaling(o);
     elf = eps_sum(o);
     elf(1) = eps;
     y = elf;
