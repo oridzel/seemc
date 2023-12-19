@@ -169,7 +169,7 @@ classdef SEEMC < handle
             legend
         end
 
-        function calculateCoincidenceHistogram(obj)
+        function calculateCoincidenceHistogram(obj,truePairs)
             if obj.onlyEscaped
                 error('For coincidence histogram all electron trajectories must be stored.')
             end
@@ -178,10 +178,13 @@ classdef SEEMC < handle
                 for j = 1:obj.numTrajectories
                     for k = 1:length(obj.statistics{i}{j})
                         if ~obj.statistics{i}{j}(k).Dead && obj.statistics{i}{j}(k).isSecondary
-                            if ~obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Dead && ...
-                                    obj.statistics{i}{j}(k).Energy + obj.statistics{i}{j}(k).InnerPotential == ...
+                            if ~obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Dead
+                                if truePairs
+                                    obj.coincidenceHistogram{i}(end+1,:) = [obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Energy obj.statistics{i}{j}(k).Energy];
+                                elseif obj.statistics{i}{j}(k).Energy + obj.statistics{i}{j}(k).InnerPotential == ...
                                     obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).EnergyLoss + obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).EnergySE
-                                obj.coincidenceHistogram{i}(end+1,:) = [obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Energy obj.statistics{i}{j}(k).Energy];
+                                    obj.coincidenceHistogram{i}(end+1,:) = [obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Energy obj.statistics{i}{j}(k).Energy];
+                                end
                             end
                         end
                     end
@@ -193,7 +196,7 @@ classdef SEEMC < handle
             figure
             hold on
             box on
-            histogram2(obj.coincidenceHistogram{ind}(:,1),obj.coincidenceHistogram{ind}(:,2),200,'FaceColor','flat')
+            histogram2(obj.coincidenceHistogram{ind}(:,1),obj.coincidenceHistogram{ind}(:,2),nbins,'FaceColor','flat')
             xlabel('Electron energy (eV)')
             ylabel('Electron energy (eV)')
             xlim([0,obj.energyArray(ind)])
@@ -201,12 +204,13 @@ classdef SEEMC < handle
             colorbar
             fontsize(20,"points")
             title(obj.matName)
-	    savefig([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.fig'])
 
-	    set(gcf,'Units','inches');
-		screenposition = get(gcf,'Position');
-		set(gcf,'PaperPosition',[0 0 screenposition(3:4)],'PaperSize',[screenposition(3:4)]);
-		print -dpdf -painters test
+	        savefig([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.fig'])
+    
+	        set(gcf,'Units','inches');
+		    screenposition = get(gcf,'Position');
+		    set(gcf,'PaperPosition',[0 0 screenposition(3:4)],'PaperSize',[screenposition(3:4)]);
+		    print([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.pdf'],'-dpdf','-vector')
         end
 
         function getTrajectories(obj)
