@@ -3,6 +3,7 @@ classdef SEEMC < handle
         numTrajectories = 1000
         matName = 'Au'
         isMetal = true
+        cbRef = false
         trackTrajectories = false
         energyArray
         sample
@@ -20,9 +21,8 @@ classdef SEEMC < handle
             obj.matName = inputpar.matName;
             obj.isMetal = inputpar.isMetal;
             obj.numTrajectories = inputpar.numTrajectories;
-            obj.trackTrajectories = inputpar.trackTrajectories;
             obj.energyArray = inputpar.energy;
-            obj.onlyEscaped = inputpar.onlyEscaped;
+
             obj.sample = Sample(obj.matName,obj.isMetal);
         end
         function simulate(obj)
@@ -32,6 +32,7 @@ classdef SEEMC < handle
             energy_array = obj.energyArray;
             smpl = obj.sample;
             track = obj.trackTrajectories;
+            cb = obj.cbRef;
             stat = cell(size(energy_array));
             saveEscaped = obj.onlyEscaped;
 
@@ -42,7 +43,7 @@ classdef SEEMC < handle
                 parfor i = 1:n_traj
                     e_count = 0;
                     res = Electron.empty;
-                    res(end+1) = Electron(energy,smpl,track);
+                    res(end+1) = Electron(energy,smpl,cb,track);
                     while e_count < length(res)
                         e_count = e_count + 1;
                         while res(e_count).Inside && ~res(e_count).Dead
@@ -56,7 +57,7 @@ classdef SEEMC < handle
                                         uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
                                                 sin(acos(2*rand-1))*sin(2*rand*pi),...
                                                 cos(acos(2*rand-1)) ];
-                                        res(end + 1) = Electron(e_se,smpl,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
+                                        res(end + 1) = Electron(e_se,smpl,cb,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
                                         res(e_count).nSecondaries = res(e_count).nSecondaries + 1;
                                     end
                                 end

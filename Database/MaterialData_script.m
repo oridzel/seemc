@@ -13,14 +13,15 @@ load MaterialData.mat
 % MaterialData.Ag = Make_Ag;
 % MaterialData.W = Make_W;
 % 
-% MaterialData.PMMA = Make_PMMA;
-% MaterialData.SiO2 = Make_SiO2;
+MaterialData.PMMA_Drude = Make_PMMA;
+MaterialData.PMMA_MLL = Make_PMMA_MLL;
+MaterialData.SiO2 = Make_SiO2;
 % MaterialData.Si = Make_Si;
 % MaterialData.Si_DL = Make_Si_DL;
 % MaterialData.Si_DFT_b0l0 = Make_Si_DFT_b0l0;
 % MaterialData.Si_DFT_b1l0 = Make_Si_DFT_b1l0;
 % MaterialData.Si_DFT_b1l1 = Make_Si_DFT_b1l1;
-MaterialData.H2O = Make_H2O;
+% MaterialData.H2O = Make_H2O;
 
 filename = [current_full_path(1).file(1:ind-2) filesep 'MaterialData.mat'];
 save(filename,"MaterialData")

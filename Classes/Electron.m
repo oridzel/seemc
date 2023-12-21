@@ -19,6 +19,7 @@ classdef Electron < handle
         ScatteringType
         nSecondaries = 0
         EnergySE
+        ConductionBandreference = false
     end
     properties (Dependent)
         IIMFP
@@ -27,14 +28,15 @@ classdef Electron < handle
         ITMFP
     end
     methods
-        function obj = Electron(e,mat,saveCoord,xyz,uvw,gen,se,ind)
+        function obj = Electron(e,mat,cbRef,saveCoord,xyz,uvw,gen,se,ind)
             obj.Material = mat;
+            obj.ConductionBandreference = cbRef;
             if obj.Material.isMetal
                 obj.InnerPotential = obj.Material.MaterialData.Ef + obj.Material.MaterialData.Wf;
             else
                 obj.InnerPotential = obj.Material.MaterialData.Affinity + obj.Material.MaterialData.Evb + obj.Material.MaterialData.Eg;
             end
-            if nargin > 3
+            if nargin > 4
                 obj.xyz = xyz;
                 obj.uvw = uvw;
                 obj.Generation = gen;
@@ -56,7 +58,7 @@ classdef Electron < handle
         function travel(obj)
             s = -(1/obj.ITMFP)*log(rand);
             if obj.xyz(3) + obj.uvw(3)*s < 0
-                s = abs(obj.xyz(3)/obj.uvw(3))+0.0001;
+                s = abs(obj.xyz(3)/obj.uvw(3)) + 0.0001;
             end
             obj.PathLength = obj.PathLength + s;
             obj.xyz(1) = obj.xyz(1) + obj.uvw(1)*s;
@@ -160,9 +162,15 @@ classdef Electron < handle
             if ~obj.Dead
                 if obj.xyz(end) < 0
                     beta = pi - obj.Angles(1);
-                    ecos = obj.Energy*cos(beta)^2;             
-                    if ecos > obj.InnerPotential
-                        t = 4*sqrt(1 - obj.InnerPotential/ecos)/(1 + sqrt(1 - obj.InnerPotential/ecos))^2;
+                    if obj.ConductionBandreference
+                        ecos = (obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb)*cos(beta)^2;
+                        ui = obj.Material.MaterialData.Affinity;
+                    else
+                        ecos = obj.Energy*cos(beta)^2;
+                        ui = obj.InnerPotential;
+                    end
+                    if ecos > ui
+                        t = 4*sqrt(1 - ui/ecos)/(1 + sqrt(1 - ui/ecos))^2;
                     else
                         t = 0;
                     end
