@@ -69,6 +69,17 @@ classdef Sample
             end
         end
 
+        function plotEnergyMomentumELF(obj)
+            figure
+            box on
+            h = pcolor(obj.MaterialData.q,obj.MaterialData.eloss,obj.MaterialData.ELF);
+            h.EdgeColor = 'None';
+            xlabel("Momentum transfer (A^{-1})");
+            ylabel("Energy loss (eV)")
+            title(strrep(obj.Name,'_',' '))
+            fontsize(18,"points")
+        end
+
         function val = get.MaterialData(obj)
             val = MaterialDatabase.getData(obj.Name);            
         end
