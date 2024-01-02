@@ -6,7 +6,7 @@ classdef SEEMC < handle
         cbRef = false
         trackTrajectories = false
         energyArray
-        sample
+        layers
         statistics
         onlyEscaped = true
         bse
@@ -23,14 +23,18 @@ classdef SEEMC < handle
             obj.numTrajectories = inputpar.numTrajectories;
             obj.energyArray = inputpar.energy;
 
-            obj.sample = Sample(obj.matName,obj.isMetal);
+            if length(obj.matName) == 1
+                obj.layers = Layer(Sample(obj.matName{1},obj.isMetal{1}));
+            elseif length(obj.matName) == 2 && isfield(inputpar,'thickness')
+                obj.layers = [ Layer(Sample(obj.matName{1},obj.isMetal{1}),inputpar.thickness) Layer(Sample(obj.matName{2},obj.isMetal{2})) ];
+            end
         end
         function simulate(obj)
 
             obj.statistics = cell(1);
             n_traj = obj.numTrajectories;
             energy_array = obj.energyArray;
-            smpl = obj.sample;
+            lyrs = obj.layers;
             track = obj.trackTrajectories;
             cb = obj.cbRef;
             stat = cell(size(energy_array));
@@ -40,10 +44,10 @@ classdef SEEMC < handle
                 energy = energy_array(e);
                 disp(energy)
                 electronData = cell(n_traj,1);            
-                parfor i = 1:n_traj
+                for i = 1:n_traj
                     e_count = 0;
                     res = Electron.empty;
-                    res(end+1) = Electron(energy,smpl,cb,track);
+                    res(end+1) = Electron(energy,lyrs,cb,track);
                     while e_count < length(res)
                         e_count = e_count + 1;
                         while res(e_count).Inside && ~res(e_count).Dead
@@ -57,7 +61,7 @@ classdef SEEMC < handle
                                         uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
                                                 sin(acos(2*rand-1))*sin(2*rand*pi),...
                                                 cos(acos(2*rand-1)) ];
-                                        res(end + 1) = Electron(e_se,smpl,cb,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
+                                        res(end + 1) = Electron(e_se,lyrs,cb,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
                                         res(e_count).nSecondaries = res(e_count).nSecondaries + 1;
                                     end
                                 end

@@ -4,7 +4,9 @@ classdef Electron < handle
         EnergyLoss double {mustBeNonnegative}
         InnerPotential double {mustBeNonnegative}
         PathLength double {mustBeNonnegative} = 0
-        Material Sample
+        Layers(1,:) Layer
+        currentLayer = 1
+        multiLayer = false
         Deflection(1,2) double = [0,0]
         Angles(1,2) double
         xyz(1,3) double = [0,0,0]
@@ -28,13 +30,16 @@ classdef Electron < handle
         ITMFP
     end
     methods
-        function obj = Electron(e,mat,cbRef,saveCoord,xyz,uvw,gen,se,ind)
-            obj.Material = mat;
+        function obj = Electron(e,layers,cbRef,saveCoord,xyz,uvw,gen,se,ind)
+            obj.Layers = layers;
+            if length(layers) == 2
+                obj.multiLayer = true;
+            end
             obj.ConductionBandreference = cbRef;
-            if obj.Material.isMetal
-                obj.InnerPotential = obj.Material.MaterialData.Ef + obj.Material.MaterialData.Wf;
+            if obj.Layers(1).Material.isMetal
+                obj.InnerPotential = obj.Layers(1).Material.MaterialData.Ef + obj.Layers(1).Material.MaterialData.Wf;
             else
-                obj.InnerPotential = obj.Material.MaterialData.Affinity + obj.Material.MaterialData.Evb + obj.Material.MaterialData.Eg;
+                obj.InnerPotential = obj.Layers(1).Material.MaterialData.Affinity + obj.Layers(1).Material.MaterialData.Evb + obj.Layers(1).Material.MaterialData.Eg;
             end
             if nargin > 4
                 obj.xyz = xyz;
@@ -57,9 +62,18 @@ classdef Electron < handle
         end
         function travel(obj)
             s = -(1/obj.ITMFP)*log(rand);
-            if obj.xyz(3) + obj.uvw(3)*s < 0
+
+            if obj.xyz(3) + obj.uvw(3)*s < 0 % crosses the boundary vacuum/surface
                 s = abs(obj.xyz(3)/obj.uvw(3)) + 0.0001;
+                obj.currentLayer = 1;
+            elseif obj.multiLayer && obj.xyz(3) > 0 && obj.xyz(3) < obj.Layers(1).Thickness && obj.xyz(3) + obj.uvw(3)*s > obj.Layers(1).Thickness
+                s = abs( (obj.Layers(1).Thickness - obj.xyz(3))/obj.uvw(3) ) + 0.0001;
+                obj.currentLayer = 2;
+            elseif obj.multiLayer && obj.xyz(3) > 0 && obj.xyz(3) > obj.Layers(1).Thickness && obj.xyz(3) + obj.uvw(3)*s < obj.Layers(1).Thickness
+                s = abs( (obj.Layers(1).Thickness - obj.xyz(3))/obj.uvw(3) ) + 0.0001;
+                obj.currentLayer = 1;
             end
+
             obj.PathLength = obj.PathLength + s;
             obj.xyz(1) = obj.xyz(1) + obj.uvw(1)*s;
             obj.xyz(2) = obj.xyz(2) + obj.uvw(2)*s;
@@ -101,12 +115,12 @@ classdef Electron < handle
             obj.Deflection(2) = rand*2*pi;
             if obj.ScatteringType == 0
                 loss = false;
-                decs = obj.Material.getDECS(obj.Energy);
-                cumdecs = cumtrapz(obj.Material.MaterialData.DECS.x,decs);
-                obj.Deflection(1) = interp1(cumdecs,obj.Material.MaterialData.DECS.x,rand);
+                decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
+                cumdecs = cumtrapz(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,decs);
+                obj.Deflection(1) = interp1(cumdecs,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
                 obj.updateDirection;
             elseif obj.ScatteringType == 1
-                [eloss,diimfp] = obj.Material.getDIIMFP(obj.Energy);
+                [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
                 cumdiimfp = cumtrapz(eloss,diimfp);
                 cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
                 while true
@@ -116,20 +130,20 @@ classdef Electron < handle
                     end
                 end
                 loss = true;
-                if obj.Material.isMetal
-                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Material.MaterialData.Ef);
+                if obj.Layers(obj.currentLayer).Material.isMetal
+                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Layers(obj.currentLayer).Material.MaterialData.Ef);
                 else
-                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Material.MaterialData.Evb);
+                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Layers(obj.currentLayer).Material.MaterialData.Evb);
                 end
                 obj.Energy = obj.Energy - obj.EnergyLoss;
                 obj.died;
-                if obj.Material.isMetal
+                if obj.Layers(obj.currentLayer).Material.isMetal
                     min_energy = 1;
                 else
-                    min_energy = obj.Material.MaterialData.Eg;
+                    min_energy = obj.Layers(obj.currentLayer).Material.MaterialData.Eg;
                 end
                 if ~obj.Dead && obj.Energy > min_energy
-                    [theta, angdist] = obj.Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
+                    [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
                     cumang = cumtrapz(theta, angdist);
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                     if isfinite(cumang)
@@ -141,12 +155,12 @@ classdef Electron < handle
                 end
             else
                 rn = rand;
-                e = (obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb)/h2ev;
-                de = obj.Material.MaterialData.Phonon.eloss/h2ev;
+                e = (obj.Energy - obj.Layers(obj.currentLayer).Material.MaterialData.Eg - obj.Layers(obj.currentLayer).Material.MaterialData.Evb)/h2ev;
+                de = obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss/h2ev;
                 if e - de > 0
                     bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
                     obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
-                    obj.Energy = obj.Energy - obj.Material.MaterialData.Phonon.eloss;
+                    obj.Energy = obj.Energy - obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss;
                     obj.died;
                     if ~obj.Dead && isreal(obj.Deflection(1))
                         obj.updateDirection;
@@ -162,9 +176,9 @@ classdef Electron < handle
             if ~obj.Dead
                 if obj.xyz(end) < 0
                     beta = pi - obj.Angles(1);
-                    if obj.ConductionBandreference
-                        ecos = (obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb)*cos(beta)^2;
-                        ui = obj.Material.MaterialData.Affinity;
+                    if ~obj.Layers(1).Material.isMetal && obj.ConductionBandreference
+                        ecos = (obj.Energy - obj.Layers(1).Material.MaterialData.Eg - obj.Layers(1).Material.MaterialData.Evb)*cos(beta)^2;
+                        ui = obj.Layers(1).Material.MaterialData.Affinity;
                     else
                         ecos = obj.Energy*cos(beta)^2;
                         ui = obj.InnerPotential;
@@ -208,21 +222,21 @@ classdef Electron < handle
         function testDECSsampling(obj)
             n = 10000;
             angle = zeros(n);
-            decs = obj.Material.getDECS(obj.Energy);
-            cumdecs = cumtrapz(obj.Material.MaterialData.DECS.x,decs);
+            decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
+            cumdecs = cumtrapz(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,decs);
             for i = 1:n
-                angle(i) = interp1(cumdecs,obj.Material.MaterialData.DECS.x,rand);
+                angle(i) = interp1(cumdecs,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
             end
             figure
             hold on
             h = histogram(angle);
-            plot(obj.Material.MaterialData.DECS.x,decs/max(decs)*max(h.Values))
+            plot(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,decs/max(decs)*max(h.Values))
             xlabel('Angle (rad)')
         end
         function testDIIMFPsampling(obj)
             n = 10000;
             loss = zeros(n);
-            [eloss,diimfp] = obj.Material.getDIIMFP(obj.Energy);
+            [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
             cumdiimfp = cumtrapz(eloss,diimfp);
             cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
             for i = 1:n
@@ -238,7 +252,7 @@ classdef Electron < handle
             n = 10000;
             ang = zeros(n);
             for i = 1:n
-                [theta, angdist] = obj.Material.getAngularIIMFP(500,20);
+                [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(500,20);
                 cumang = cumtrapz(theta, angdist);
                 cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                 ang(i) = interp1(cumang,theta,rand);
@@ -253,18 +267,20 @@ classdef Electron < handle
             obj.Energy = val;
         end
         function val = get.IIMFP(obj)
-            val = 1/obj.Material.getIMFP(obj.Energy);
+            val = 1/obj.Layers(obj.currentLayer).Material.getIMFP(obj.Energy);
         end
         function val = get.IEMFP(obj)
-            if obj.Material.isMetal
-                val = 1/obj.Material.getEMFP(obj.Energy);
+            if obj.Layers(obj.currentLayer).Material.isMetal
+                val = 1/obj.Layers(obj.currentLayer).Material.getEMFP(obj.Energy);
             else
-                val = 1/obj.Material.getEMFP(obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb);
+                val = 1/obj.Layers(obj.currentLayer).Material.getEMFP(obj.Energy - ...
+                    obj.Layers(obj.currentLayer).Material.MaterialData.Eg - obj.Layers(obj.currentLayer).Material.MaterialData.Evb);
             end
         end
         function val = get.IPHMFP(obj)
-            if ~obj.Material.isMetal
-                val = obj.Material.getIPHMFP(obj.Energy - obj.Material.MaterialData.Eg - obj.Material.MaterialData.Evb);
+            if ~obj.Layers(obj.currentLayer).Material.isMetal
+                val = obj.Layers(obj.currentLayer).Material.getIPHMFP(obj.Energy - ...
+                    obj.Layers(obj.currentLayer).Material.MaterialData.Eg - obj.Layers(obj.currentLayer).Material.MaterialData.Evb);
             else
                 val = 0;
             end
