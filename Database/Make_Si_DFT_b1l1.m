@@ -14,7 +14,7 @@ Si_DFT_b1l1.NvSGS = 4;
 Si_DFT_b1l1.Eg = 1.1;
 Si_DFT_b1l1.Ep = 16.59;
 Si_DFT_b1l1.Ef = 12.5;
-Si_DFT_b1l1.Evb = 12;
+Si_DFT_b1l1.Evb = 12.44;
 Si_DFT_b1l1.Affinity = 4.05;
 
 %% Elastic properties

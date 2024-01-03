@@ -14,7 +14,7 @@ Si.NvSGS = 4;
 Si.Eg = 1.1;
 Si.Ep = 16.59;
 Si.Ef = 12.5;
-Si.Evb = 12;
+Si.Evb = 12.44;
 Si.Affinity = 4.05;
 
 %% Elastic properties

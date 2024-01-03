@@ -14,7 +14,7 @@ Si_DL.NvSGS = 4;
 Si_DL.Eg = 1.1;
 Si_DL.Ep = 16.59;
 Si_DL.Ef = 12.5;
-Si_DL.Evb = 12;
+Si_DL.Evb = 12.44;
 Si_DL.Affinity = 4.05;
 
 %% Elastic properties

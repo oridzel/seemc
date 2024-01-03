@@ -109,16 +109,16 @@ classdef ElsepaRunner
 
                     if z == length(Composition.Z) && length(Composition.Z) > 1
                         data.x = El.data(:,1)/180*pi;
-                        data.y(:,i) = sum(decs_all(:,:,i).*Composition.index')/sumweights;
+                        data.y = sum(decs_all(:,:,i).*Composition.index')/sumweights;
                         data.sigma_el = sum(sigma_el(:,i).*Composition.index')/sumweights;
                         data.sigma_tr1 = sum(sigma_tr1(:,i).*Composition.index')/sumweights;
                         Res(i) = data;
                     elseif length(Composition.Z) == 1
                         data.x = El.data(:,1)/180*pi;
                         if isMolecule
-                            data.y(:,i) = El.data(:,4)*1e16;
+                            data.y = El.data(:,4)*1e16;
                         else
-                            data.y(:,i) = El.data(:,4)*a0^2;
+                            data.y = El.data(:,4)*a0^2;
                         end
                         data.sigma_el = sigma_el(1,i);
                         data.sigma_tr1 = sigma_tr1(1,i);
