@@ -1,34 +1,25 @@
 function base_uvw = updateDirection(uvw, deflection, algorithm)
     if algorithm == 1
-        cdt = sin(deflection(1));
-        sdf = sin(deflection(2));
-        cdf = sin(deflection(2));
-        dxy = uvw(1)^2 + uvw(2)^2;
-        dxyz = dxy + uvw(3)^2;
-        if abs(dxyz - 1) > 1e-9
-            fnorm = 1/sqrt(dxyz);
-            uvw(1) = fnorm*uvw(1);
-            uvw(2) = fnorm*uvw(2);
-            uvw(3) = fnorm*uvw(3);
-            dxy = uvw(1)^2 + uvw(2)^2;
-        end
-        if dxy > 1e-9
-            sdt = sqrt((1 - cdt^2)/dxy);
-            up = uvw(1);
-            base_uvw(1) = uvw(1)*cdt + sdt*(up*uvw(3)*cdf - uvw(2)*sdf);
-            base_uvw(2) = uvw(2)*cdt + sdt*(uvw(2)*uvw(3)*cdf + up*sdf);
-            base_uvw(3) = uvw(3)*cdt - dxy*sdt*cdf;
+        sinpsi = sin(deflection(1));
+        cospsi = cos(deflection(1));
+        sinfi = sin(deflection(2));
+        cosfi = cos(deflection(2));
+        costh = uvw(3);
+        sinth = sqrt(uvw(1)^2 + uvw(2)^2);
+        if sinth > 1e-10
+            cosphi = uvw(1)/sinth;
+            sinphi = uvw(2)/sinth;
         else
-            sdt = sqrt(1 - cdt^2);
-            base_uvw(2) = sdt*sdf;
-            if uvw(3) > 0
-                base_uvw(1) = sdt*cdf;
-                base_uvw(3) = cdt;
-            else
-                base_uvw(1) = -1*sdt*cdf;
-                base_uvw(3) = -1*cdt;
-            end
+            cosphi = 1;
+            sinphi = 0;
         end
+
+        h0 = sinpsi*cosfi;
+        h1 = sinth*cospsi + h0*costh;
+        h2 = sinpsi*sinfi;
+        base_uvw(1) = h1*cosphi - h2*sinphi;
+        base_uvw(2) = h1*sinphi + h2*cosphi;
+        base_uvw(3) = costh*cospsi - h0*sinth;
     elseif algorithm == 2
         theta0 = acos(uvw(end));
         phi0 = atan2(uvw(2),uvw(1));
