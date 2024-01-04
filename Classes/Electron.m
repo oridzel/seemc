@@ -8,7 +8,6 @@ classdef Electron < handle
         currentLayer = 1
         multiLayer = false
         Deflection(1,2) double {mustBeReal} = [0,0]
-        Angles(1,2) double
         xyz(1,3) double {mustBeReal} = [0,0,0]
         uvw(1,3) double {mustBeReal} = [0,0,1]
         coordinates {mustBeReal}
@@ -89,10 +88,6 @@ classdef Electron < handle
                 obj.coordinates(end+1,:) = [obj.xyz,obj.Energy];
             end
         end
-        function dircos2ang(obj)
-            obj.Angles(1) = acos(obj.uvw(3));
-            obj.Angles(2) = atan2(obj.uvw(2),obj.uvw(1));
-        end
         function getScatteringType(obj)
             rn = rand;
             if rn < obj.IEMFP/obj.ITMFP
@@ -162,15 +157,13 @@ classdef Electron < handle
             end
         end
         function escape(obj)
-            obj.dircos2ang;
             if ~obj.Dead
                 if obj.xyz(end) < 0
-                    beta = pi - obj.Angles(1);
                     if ~obj.Layers(1).Material.isMetal && obj.ConductionBandreference
-                        ecos = (obj.Energy - obj.Layers(1).Material.MaterialData.Eg - obj.Layers(1).Material.MaterialData.Evb)*cos(beta)^2;
+                        ecos = (obj.Energy - obj.Layers(1).Material.MaterialData.Eg - obj.Layers(1).Material.MaterialData.Evb)*obj.uvw(3)^2;
                         ui = obj.Layers(1).Material.MaterialData.Affinity;
                     else
-                        ecos = obj.Energy*cos(beta)^2;
+                        ecos = obj.Energy*obj.uvw(3)^2;
                         ui = obj.InnerPotential;
                     end
                     if ecos > ui
@@ -180,18 +173,18 @@ classdef Electron < handle
                     end
                     if rand < t
                         obj.Inside = false;
-                        obj.xyz(1) = obj.xyz(1) + sin(beta)*cos(obj.Angles(2))*obj.xyz(end)/cos(beta);
-                        obj.xyz(2) = obj.xyz(2) + sin(beta)*sin(obj.Angles(2))*obj.xyz(end)/cos(beta);
-                        obj.xyz(3) = 0;
-                        obj.Angles(1) = pi - asin(sin(beta)*sqrt(obj.Energy/(obj.Energy-obj.InnerPotential)));
-                        if obj.saveCoordinates
-                            obj.coordinates(end,:) = [obj.xyz,obj.Energy];
+                        old_xyd = sqrt(1 - obj.uvw(3)^2);
+                        obj.uvw(3) = -sqrt( (ecos - ui)/(obj.Energy - obj.InnerPotential) );
+                        xyd = sqrt(1 - obj.uvw(3)^2);
+                        if abs(obj.uvw(3)) ~= 1
+                            obj.uvw(1) = obj.uvw(1)*xyd/old_xyd;
+                            obj.uvw(2) = obj.uvw(2)*xyd/old_xyd;
                         end
                         obj.Energy = obj.Energy - obj.InnerPotential;
                         if obj.saveCoordinates
-                            x = obj.xyz(1) + 100*sin(obj.Angles(1))*cos(obj.Angles(2));
-                            y = obj.xyz(2) + 100*sin(obj.Angles(1))*sin(obj.Angles(2));
-                            z = obj.xyz(3) + 100*cos(obj.Angles(1));
+                            x = obj.xyz(1) + 100*obj.uvw(1);
+                            y = obj.xyz(2) + 100*obj.uvw(2);
+                            z = obj.xyz(3) + 100*obj.uvw(3);
                             obj.coordinates(end+1,:) = [x,y,z,obj.Energy];
                         end
                     else
