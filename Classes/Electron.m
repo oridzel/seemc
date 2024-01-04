@@ -7,11 +7,11 @@ classdef Electron < handle
         Layers(1,:) Layer
         currentLayer = 1
         multiLayer = false
-        Deflection(1,2) double = [0,0]
+        Deflection(1,2) double {mustBeReal} = [0,0]
         Angles(1,2) double
-        xyz(1,3) double = [0,0,0]
-        uvw(1,3) double = [0,0,1]
-        coordinates
+        xyz(1,3) double {mustBeReal} = [0,0,0]
+        uvw(1,3) double {mustBeReal} = [0,0,1]
+        coordinates {mustBeReal}
         saveCoordinates = false
         isSecondary = false
         Generation = 0 % Primary electron
@@ -63,15 +63,22 @@ classdef Electron < handle
         function travel(obj)
             s = -(1/obj.ITMFP)*log(rand);
 
-            if obj.xyz(3) + obj.uvw(3)*s < 0 % crosses the boundary vacuum/surface
+            if obj.xyz(3) + obj.uvw(3)*s < 0 % crosses the boundary solid -> vacuum
                 s = abs(obj.xyz(3)/obj.uvw(3)) + 0.0001;
                 obj.currentLayer = 1;
-            elseif obj.multiLayer && obj.xyz(3) > 0 && obj.xyz(3) < obj.Layers(1).Thickness && obj.xyz(3) + obj.uvw(3)*s > obj.Layers(1).Thickness
-                s = abs( (obj.Layers(1).Thickness - obj.xyz(3))/obj.uvw(3) ) + 0.0001;
-                obj.currentLayer = 2;
-            elseif obj.multiLayer && obj.xyz(3) > 0 && obj.xyz(3) > obj.Layers(1).Thickness && obj.xyz(3) + obj.uvw(3)*s < obj.Layers(1).Thickness
-                s = abs( (obj.Layers(1).Thickness - obj.xyz(3))/obj.uvw(3) ) + 0.0001;
-                obj.currentLayer = 1;
+            elseif obj.multiLayer
+                % check if crosses the boundary between layers
+                for i = 1:length(obj.Layers)-1
+                    if obj.xyz(3) < obj.Layers(i).Thickness && obj.xyz(3) + obj.uvw(3)*s > obj.Layers(i).Thickness
+                        s = abs( (obj.Layers(i).Thickness - obj.xyz(3))/obj.uvw(3) ) + 0.0001;
+                        obj.currentLayer = i + 1;
+                        break
+                    elseif obj.xyz(3) > obj.Layers(i).Thickness && obj.xyz(3) + obj.uvw(3)*s < obj.Layers(i).Thickness
+                        s = abs( (obj.Layers(i).Thickness - obj.xyz(3))/obj.uvw(3) ) + 0.0001;
+                        obj.currentLayer = i;
+                        break
+                    end
+                end
             end
 
             obj.PathLength = obj.PathLength + s;
@@ -83,23 +90,8 @@ classdef Electron < handle
             end
         end
         function dircos2ang(obj)
-            if ~isreal(obj.uvw)
-                disp(obj)
-                obj.Dead = true;
-            else
-                obj.Angles(1) = acos(obj.uvw(3));
-                obj.Angles(2) = atan2(obj.uvw(2),obj.uvw(1));
-            end
-        end
-        function updateDirection(obj)
-            theta0 = acos(obj.uvw(end));
-            phi0 = atan2(obj.uvw(2),obj.uvw(1));
-            theta = acos(cos(theta0)*cos(obj.Deflection(1)) - sin(theta0)*sin(obj.Deflection(1))*cos(obj.Deflection(2)));
-            phi = asin( sin(obj.Deflection(1))*sin(obj.Deflection(2))/sin(theta) ) + phi0;
-
-            obj.uvw(1) = sin(theta)*cos(phi);
-            obj.uvw(2) = sin(theta)*sin(phi);
-            obj.uvw(3) = cos(theta);
+            obj.Angles(1) = acos(obj.uvw(3));
+            obj.Angles(2) = atan2(obj.uvw(2),obj.uvw(1));
         end
         function getScatteringType(obj)
             rn = rand;
@@ -118,7 +110,7 @@ classdef Electron < handle
                 decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
                 cumdecs = cumtrapz(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,decs);
                 obj.Deflection(1) = interp1(cumdecs,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
-                obj.updateDirection;
+                obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
             elseif obj.ScatteringType == 1
                 [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
                 cumdiimfp = cumtrapz(eloss,diimfp);
@@ -148,9 +140,7 @@ classdef Electron < handle
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                     if isfinite(cumang)
                         obj.Deflection(1) = interp1(cumang,theta,rand);
-                        if isreal(obj.Deflection(1))
-                            obj.updateDirection;
-                        end
+                        obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
                     end
                 end
             else
@@ -163,7 +153,7 @@ classdef Electron < handle
                     obj.Energy = obj.Energy - obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss;
                     obj.died;
                     if ~obj.Dead && isreal(obj.Deflection(1))
-                        obj.updateDirection;
+                        obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
                     end
                     loss = false;
                 else

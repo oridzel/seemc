@@ -1,14 +1,21 @@
 clear
 
-inputpar.matName = 'Si_DFT_b1l1';
-inputpar.isMetal = false;
-inputpar.numTrajectories = 1000;
-inputpar.energy = [20 50 100 200 250 300 350 400 450 500 750 1000 1500];
+inputpar.matName = { 'SiO2' };
+inputpar.isMetal = { false };
+% inputpar.thickness = 50;
+inputpar.numTrajectories = 100;
+inputpar.energy = 100;
 
 s = SEEMC(inputpar);
-s.onlyEscaped = true;
-s.cbRef = false;
+s.onlyEscaped = false;
+s.cbRef = true;
+s.trackTrajectories = true;
 
+%% Run simulation
 tic
-s.simulate;
+s.simulate; 
 toc
+
+%% Trajectories
+s.getTrajectories;
+s.plotTrajectories(1);

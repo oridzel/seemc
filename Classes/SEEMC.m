@@ -6,7 +6,7 @@ classdef SEEMC < handle
         cbRef = false
         trackTrajectories = false
         energyArray
-        layers
+        layers(1,:) Layer
         statistics
         onlyEscaped = true
         bse
@@ -25,8 +25,14 @@ classdef SEEMC < handle
 
             if length(obj.matName) == 1
                 obj.layers = Layer(Sample(obj.matName{1},obj.isMetal{1}));
-            elseif length(obj.matName) == 2 && isfield(inputpar,'thickness')
-                obj.layers = [ Layer(Sample(obj.matName{1},obj.isMetal{1}),inputpar.thickness) Layer(Sample(obj.matName{2},obj.isMetal{2})) ];
+            elseif length(obj.matName) > 1
+                if ~isfield(inputpar,'thickness') || length(inputpar.thickness) ~= length(obj.matName)-1
+                    error('Set thickness for each layer');
+                end
+                for i = 1:length(obj.matName)-1
+                    obj.layers(i) = Layer(Sample(obj.matName{i},obj.isMetal{i}),inputpar.thickness(i));
+                end
+                obj.layers(length(obj.matName)) = Layer(Sample(obj.matName{i},obj.isMetal{i}));
             end
         end
         function simulate(obj)
@@ -58,9 +64,10 @@ classdef SEEMC < handle
                                 if res(e_count).scatter
                                     e_se = res(e_count).EnergyLoss + res(e_count).EnergySE;
                                     if e_se > res(e_count).InnerPotential
-                                        uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
-                                                sin(acos(2*rand-1))*sin(2*rand*pi),...
-                                                cos(acos(2*rand-1)) ];
+                                        % uvw = [ sin(acos(2*rand-1))*cos(2*rand*pi),...
+                                        %         sin(acos(2*rand-1))*sin(2*rand*pi),...
+                                        %         cos(acos(2*rand-1)) ];
+                                        uvw = updateDirection(res(e_count).uvw,[asin(cos(res(e_count).Deflection(1))),res(e_count).Deflection(2) + pi],1);
                                         res(end + 1) = Electron(e_se,lyrs,cb,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
                                         res(e_count).nSecondaries = res(e_count).nSecondaries + 1;
                                     end
@@ -136,7 +143,7 @@ classdef SEEMC < handle
             xlabel('Energy (eV)')
             ylabel('Yield')
             fontsize(20,"points")
-            title(obj.matName)
+            title(strrep(obj.matName,'_',' '))
             legend
         end
 
@@ -170,7 +177,7 @@ classdef SEEMC < handle
             xlabel('Electron energy (eV)')
             ylabel('Counts')
             fontsize(20,"points")
-            title(obj.matName)
+            title(strrep(obj.matName,'_',' '))
             legend
         end
 
@@ -208,7 +215,7 @@ classdef SEEMC < handle
             colormap('turbo')
             colorbar
             fontsize(20,"points")
-            title(obj.matName)
+            title(strrep(obj.matName,'_',' '))
 
 	        savefig([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.fig'])
     
@@ -236,7 +243,7 @@ classdef SEEMC < handle
 
         function plotTrajectories(obj,ind)
             figure
-            title([obj.matName ' E_0 = ' num2str(obj.energyArray(ind)) ' eV'])
+            title([strrep(obj.matName,'_',' ') ' E_0 = ' num2str(obj.energyArray(ind)) ' eV'])
             hold on
             box on
             colormap(turbo)
@@ -259,7 +266,7 @@ classdef SEEMC < handle
             fontsize(20,'points')
 
             figure
-            title([obj.matName ' E_0 = ' num2str(obj.energyArray(ind)) ' eV'])
+            title([strrep(obj.matName,'_',' ') ' E_0 = ' num2str(obj.energyArray(ind)) ' eV'])
             hold on
             box on
             for i = 2:length(obj.coordinateArray{ind})    
