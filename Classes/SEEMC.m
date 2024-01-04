@@ -50,7 +50,7 @@ classdef SEEMC < handle
                 energy = energy_array(e);
                 disp(energy)
                 electronData = cell(n_traj,1);            
-                for i = 1:n_traj
+                parfor i = 1:n_traj
                     e_count = 0;
                     res = Electron.empty;
                     res(end+1) = Electron(energy,lyrs,cb,track);
@@ -80,7 +80,6 @@ classdef SEEMC < handle
                             y.InnerPotential = res(e_count).InnerPotential;
                             y.EnergyLoss = res(e_count).EnergyLoss;
                             y.EnergySE = res(e_count).EnergySE;
-                            y.Angles = res(e_count).Angles;
                             y.isSecondary = res(e_count).isSecondary;
                             y.Generation = res(e_count).Generation;
                             y.ParentIndex = res(e_count).ParentIndex;
@@ -95,7 +94,6 @@ classdef SEEMC < handle
                             y.InnerPotential = res(e_count).InnerPotential;
                             y.EnergyLoss = res(e_count).EnergyLoss;
                             y.EnergySE = res(e_count).EnergySE;
-                            y.Angles = res(e_count).Angles;
                             y.isSecondary = res(e_count).isSecondary;
                             y.Generation = res(e_count).Generation;
                             y.ParentIndex = res(e_count).ParentIndex;
