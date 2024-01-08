@@ -87,11 +87,7 @@ classdef ElsepaRunner
                         Res(i) = data;
                     elseif length(Composition.Z) == 1
                         data.x = El.data(:,1)/180*pi;
-                        if isMolecule
-                            data.y = El.data(:,4)*1e16;
-                        else
-                            data.y = El.data(:,4)*a0^2;
-                        end
+                        data.y = El.data(:,4)*a0^2;
                         data.sigma_el = sigma_el(1,i);
                         data.sigma_tr1 = sigma_tr1(1,i);
                         Res(i) = data;
