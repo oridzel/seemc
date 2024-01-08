@@ -1,14 +1,14 @@
 clear
 
-inputpar.matName = { 'PMMA_Drude' };
-inputpar.isMetal = { false };
+inputpar.matName = { 'Cu' };
+inputpar.isMetal = { true };
 % inputpar.thickness = 50;
 inputpar.numTrajectories = 1000;
-inputpar.energy = [20:10:100 200 500 700 1000];
+inputpar.energy = [20:10:100 200 300 500 700 1000];
 
 s = SEEMC(inputpar);
 s.onlyEscaped = true;
-s.cbRef = true;
+s.cbRef = false;
 s.trackTrajectories = false;
 
 %% Run simulation

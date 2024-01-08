@@ -216,11 +216,7 @@ classdef SEEMC < handle
             title(strrep(obj.matName,'_',' '))
 
 	        savefig([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.fig'])
-    
-	        set(gcf,'Units','inches');
-		    screenposition = get(gcf,'Position');
-		    set(gcf,'PaperPosition',[0 0 screenposition(3:4)],'PaperSize',[screenposition(3:4)]);
-		    print([obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.pdf'],'-dpdf','-vector')
+            savepdf(gcf,[obj.matName '_' num2str(obj.energyArray(ind)) '_e2e.pdf'])
         end
 
         function getTrajectories(obj)
