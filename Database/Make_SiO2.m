@@ -15,8 +15,8 @@ SiO2.Eg = 9.1;
 SiO2.Ep = 22.02;
 SiO2.Evb = 10;
 SiO2.Affinity = 1.1;
-SiO2.Phonon.eps_zero = 3.84;
-SiO2.Phonon.eps_inf = 2.25;
+SiO2.Phonon.eps_zero = 3.84; % static dielectric constant
+SiO2.Phonon.eps_inf = 2.25; % high-frequency dielectric constant (the square of the static refractive index)
 SiO2.Phonon.eloss = 0.1;
 
 %% Elastic properties
