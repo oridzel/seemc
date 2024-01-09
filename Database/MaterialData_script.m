@@ -10,6 +10,9 @@ MaterialData = {};
 MaterialData.Au = Make_Au;
 MaterialData.Au_DL = Make_Au_DL;
 MaterialData.Cu = Make_Cu;
+MaterialData.Cu_DFT_b0l0 = Make_Cu_DFT_b0l0;
+MaterialData.Cu_DFT_b1l0 = Make_Cu_DFT_b1l0;
+MaterialData.Cu_DFT_b1l1 = Make_Cu_DFT_b1l1;
 MaterialData.Ag = Make_Ag; 
 MaterialData.W = Make_W;
 

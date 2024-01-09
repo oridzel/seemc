@@ -57,7 +57,7 @@ elseif ismac || isunix
     ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
     dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
 end
-load([dirData 'elf_si_dft_ocean_0_01_b1l0.mat'])
+load([dirData 'elf_si_dft+bse_ocean_0_01_b1l0.mat'])
 Si_DFT_b1l0.ELF = elf;
 Si_DFT_b1l0.eloss = omega;
 Si_DFT_b1l0.q = q;
