@@ -103,8 +103,9 @@ classdef Electron < handle
             if obj.ScatteringType == 0
                 loss = false;
                 decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
-                cumdecs = cumtrapz(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,decs);
-                obj.Deflection(1) = interp1(cumdecs,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
+                cumsigma = cumtrapz( obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,2*pi*decs.*sin(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x) );
+                cumsigma = (cumsigma - cumsigma(1))/(cumsigma(end) - cumsigma(1));
+                obj.Deflection(1) = interp1(cumsigma,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
                 obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
             elseif obj.ScatteringType == 1
                 [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
@@ -131,7 +132,7 @@ classdef Electron < handle
                 end
                 if ~obj.Dead && obj.Energy > min_energy
                     [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
-                    cumang = cumtrapz(theta, angdist);
+                    cumang = cumtrapz(theta, angdist.*sin(theta));
                     cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                     if isfinite(cumang)
                         obj.Deflection(1) = interp1(cumang,theta,rand);
