@@ -18,6 +18,7 @@ Si_DFT_b0l0.Evb = 12.44;
 Si_DFT_b0l0.Affinity = 4.05;
 
 %% Elastic properties
+%{
 Si_DFT_b0l0.Elastic.x = zeros(numel(E0),1);
 Si_DFT_b0l0.Elastic.l_el = zeros(numel(E0),1);
 Si_DFT_b0l0.Elastic.l_tr = zeros(numel(E0),1);
@@ -35,6 +36,7 @@ for i = 1:numel(E0)
     Si_DFT_b0l0.Elastic.l_tr(i) = 1/data(i).sigma_tr1/Si_DFT_b0l0.Density;
     Si_DFT_b0l0.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
 end
+%}
 
 %% Inelastic properties
 osc.model = 'Mermin';

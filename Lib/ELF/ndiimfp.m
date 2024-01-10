@@ -28,7 +28,8 @@ function [iimfp,diimfp] = ndiimfp(osc,E0,custom_elf,custom_q,custom_omega,vararg
         www = repmat(osc.eloss,n_q,1);
         qqq = transpose(exp(q)/a0);
         res_custom = transpose(interp2(x,y,custom_elf,qqq,www));
-        if E0*h2ev >= 110
+        % if E0*h2ev >= 110
+        if any(unique(isnan(res_custom)))
             ind = isnan(res_custom);
             osc.qtran = exp(q)/a0;
             res_mermin = eps_sum_allwq(osc,'bulk');

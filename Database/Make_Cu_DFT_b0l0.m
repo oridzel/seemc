@@ -15,7 +15,7 @@ Cu_DFT_b0l0.Ef = 8.7;
 Cu_DFT_b0l0.Wf = 4.65;
 
 %% Elastic properties
-% {
+%{
 Cu_DFT_b0l0.Elastic.x = zeros(numel(E0),1);
 Cu_DFT_b0l0.Elastic.l_el = zeros(numel(E0),1);
 Cu_DFT_b0l0.Elastic.l_tr = zeros(numel(E0),1);
@@ -45,7 +45,7 @@ osc.beps = 1;
 osc.Ef = Cu_DFT_b0l0.Ef; 
 osc.qtran = 0.01:0.01:20;
 osc.eloss = eps:.1:110;
-osc.egap = eps;
+osc.egap = 0;
 
 current_full_path = dbstack('-completenames');
 current_file_name = dbstack;
