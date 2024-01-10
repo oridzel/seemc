@@ -1,7 +1,11 @@
 classdef ElsepaRunner
     
     methods (Static)
-        function [Res] = RunElsepa(Composition, E0)
+        function [Res] = RunElsepa(Composition, E0, muffin, varargin)
+
+            if nargin < 3
+                muffin = 1;
+            end
 
             if isempty(E0); return; end
             current_full_path = dbstack('-completenames');
@@ -20,7 +24,7 @@ classdef ElsepaRunner
                 fprintf(fid, 'IZ      %1.0f         atomic number                               [none]\n',Composition.Z(z));
                 fprintf(fid, 'MNUCL   3          rho_n (1=P, 2=U, 3=F, 4=Uu)                  [  3]\n');
                 fprintf(fid, 'MELEC   4          rho_e (1=TFM, 2=TFD, 3=DHFS, 4=DF, 5=file)   [  4]\n');
-                fprintf(fid, 'MUFFIN  1          0=free atom, 1=muffin-tin model              [  0]\n');
+                fprintf(fid, 'MUFFIN  %d          0=free atom, 1=muffin-tin model              [  0]\n',muffin);
                 % fprintf(fid, 'RMUF   -1        muffin-tin radius (cm)                  [measured]\n');
                 fprintf(fid, 'IELEC  -1          -1=electron, +1=positron                     [ -1]\n');
                 fprintf(fid, 'MEXCH   1          V_ex (0=none, 1=FM, 2=TF, 3=RT)              [  1]\n');
@@ -53,18 +57,19 @@ classdef ElsepaRunner
                     
                     data = struct;
     
-                    % For muffin-tin ON
-                    if E0(i) < 100
-                        HEADERLINES = 47;
+                    if muffin
+                        if E0(i) < 100
+                            HEADERLINES = 47;
+                        else
+                            HEADERLINES = 44;
+                        end
                     else
-                        HEADERLINES = 44;
+                        if E0(i) < 100
+                            HEADERLINES = 39;
+                        else
+                            HEADERLINES = 36;
+                        end
                     end
-
-                    % if E0(i) < 100
-                    %     HEADERLINES = 39;
-                    % else
-                    %     HEADERLINES = 36;
-                    % end
     
                     El = importdata(f_name_el, DELIMITER, HEADERLINES);
                     a = El.textdata(~cellfun('isempty',regexp(El.textdata,'Total elastic cross section')));

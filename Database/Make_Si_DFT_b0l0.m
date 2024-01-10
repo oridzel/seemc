@@ -18,7 +18,7 @@ Si_DFT_b0l0.Evb = 12.44;
 Si_DFT_b0l0.Affinity = 4.05;
 
 %% Elastic properties
-%{
+% {
 Si_DFT_b0l0.Elastic.x = zeros(numel(E0),1);
 Si_DFT_b0l0.Elastic.l_el = zeros(numel(E0),1);
 Si_DFT_b0l0.Elastic.l_tr = zeros(numel(E0),1);

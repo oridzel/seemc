@@ -30,7 +30,7 @@ H2O.Composition.Z = [1 8];
 H2O.Composition.index = [2 1];
 
 tic;
-[data] = ElsepaRunner.RunElsepa(H2O.Composition,E0);
+[data] = ElsepaRunner.RunElsepa(H2O.Composition,E0,0);
 toc
 H2O.DECS.x = data(1).x;
 for i = 1:numel(E0)

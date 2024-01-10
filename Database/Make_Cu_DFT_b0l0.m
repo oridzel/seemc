@@ -15,7 +15,7 @@ Cu_DFT_b0l0.Ef = 8.7;
 Cu_DFT_b0l0.Wf = 4.65;
 
 %% Elastic properties
-%{
+% {
 Cu_DFT_b0l0.Elastic.x = zeros(numel(E0),1);
 Cu_DFT_b0l0.Elastic.l_el = zeros(numel(E0),1);
 Cu_DFT_b0l0.Elastic.l_tr = zeros(numel(E0),1);

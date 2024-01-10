@@ -14,7 +14,7 @@ PMMA_MLL.NvTPP = 40;
 PMMA_MLL.Eg = 6.7;
 PMMA_MLL.Ep = 19.85;
 PMMA_MLL.Evb = 15.8;
-PMMA_MLL.Affinity = 4.3;
+PMMA_MLL.Affinity = 4.5;
 PMMA_MLL.Phonon.eps_zero = 3.9;
 PMMA_MLL.Phonon.eps_inf = 2.2;
 PMMA_MLL.Phonon.eloss = 0.1;
@@ -29,7 +29,7 @@ PMMA_MLL.Composition.Z = [6 8 1];
 PMMA_MLL.Composition.index = [5 2 8];
 
 tic;
-[data] = ElsepaRunner.RunElsepa(PMMA_MLL.Composition,E0);
+[data] = ElsepaRunner.RunElsepa(PMMA_MLL.Composition,E0,0);
 toc
 PMMA_MLL.DECS.x = data(1).x;
 for i = 1:numel(E0)
