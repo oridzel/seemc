@@ -49,7 +49,7 @@ function [iimfp,diimfp] = ndiimfp(osc,E0,custom_elf,custom_q,custom_omega,vararg
     end
     
     iimfp = rel_cor_factor*iimfp / (pi*E0);
-    diimfp = iimfp./trapz(omega,iimfp) / (h2ev * a0); %normalized
+    diimfp = iimfp / (h2ev * a0);
 end
 
 

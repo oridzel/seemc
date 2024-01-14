@@ -1,7 +1,7 @@
 clear
 
-inputpar.matName = { 'Cu' };
-inputpar.isMetal = { true };
+inputpar.matName = { 'SiO2_Drude' };
+inputpar.isMetal = { false };
 % inputpar.thickness = 50;
 inputpar.numTrajectories = 1000;
 inputpar.energy = [20:10:100 200 500 700 1000];

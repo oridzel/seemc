@@ -189,7 +189,7 @@ classdef SEEMC < handle
                     for k = 1:length(obj.statistics{i}{j})
                         if ~obj.statistics{i}{j}(k).Dead && obj.statistics{i}{j}(k).isSecondary
                             if ~obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Dead
-                                if truePairs
+                                if ~truePairs
                                     obj.coincidenceHistogram{i}(end+1,:) = [obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).Energy obj.statistics{i}{j}(k).Energy];
                                 elseif obj.statistics{i}{j}(k).Energy + obj.statistics{i}{j}(k).InnerPotential == ...
                                     obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).EnergyLoss + obj.statistics{i}{j}(obj.statistics{i}{j}(k).ParentIndex).EnergySE
