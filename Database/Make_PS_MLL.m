@@ -61,7 +61,8 @@ for i = 1:length(E0)
         energy = E0(i) - PS_MLL.Eg - PS_MLL.Evb;
         osc.eloss = PS_MLL.Eg:(energy-PS_MLL.Eg)/(N-1):energy;
         PS_MLL.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, PS_MLL.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        PS_MLL.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         PS_MLL.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PS_MLL.l_in(i) = Inf;

@@ -60,7 +60,8 @@ for i = 1:length(E0)
         energy = E0(i) - PMMA_Drude.Eg - PMMA_Drude.Evb;
         osc.eloss = PMMA_Drude.Eg:(energy-PMMA_Drude.Eg)/(N-1):energy;
         PMMA_Drude.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, PMMA_Drude.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        PMMA_Drude.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         PMMA_Drude.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PMMA_Drude.l_in(i) = Inf;

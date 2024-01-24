@@ -71,7 +71,8 @@ for i = 1:length(E0)
         energy = E0(i) - Si_DFT_b0l0.Eg - Si_DFT_b0l0.Evb;
         osc.eloss = Si_DFT_b0l0.Eg:(energy-Si_DFT_b0l0.Eg)/(N-1):energy;
         Si_DFT_b0l0.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Si_DFT_b0l0.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i),elf,q,omega);
+        [iimfp, diimfp] = ndiimfp(osc,E0(i),elf,q,omega);
+        Si_DFT_b0l0.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         Si_DFT_b0l0.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Si_DFT_b0l0.l_in(i) = Inf;

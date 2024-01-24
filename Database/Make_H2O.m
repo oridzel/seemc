@@ -62,7 +62,8 @@ for i = 1:length(E0)
         energy = E0(i) - H2O.Eg - H2O.Evb;
         osc.eloss = H2O.Eg:(energy-H2O.Eg)/(N-1):energy;
         H2O.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, H2O.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        H2O.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         H2O.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         H2O.l_in(i) = Inf;

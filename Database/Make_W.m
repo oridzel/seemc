@@ -57,7 +57,8 @@ for i = 1:length(E0)
         energy = E0(i) - W.Ef;
         osc.eloss = eps:(energy-eps)/(N-1):energy;
         W.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, W.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        W.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         W.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         W.l_in(i) = Inf;

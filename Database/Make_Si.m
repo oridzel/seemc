@@ -58,7 +58,8 @@ for i = 1:length(E0)
         energy = E0(i) - Si.Eg - Si.Evb;
         osc.eloss = Si.Eg:(energy-Si.Eg)/(N-1):energy;
         Si.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Si.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        Si.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         Si.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Si.l_in(i) = Inf;

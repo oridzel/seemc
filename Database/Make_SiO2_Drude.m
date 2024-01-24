@@ -62,7 +62,8 @@ for i = 1:length(E0)
         energy = E0(i) - SiO2_Drude.Eg - SiO2_Drude.Evb;
         osc.eloss = SiO2_Drude.Eg:(energy-SiO2_Drude.Eg)/(N-1):energy;
         SiO2_Drude.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, SiO2_Drude.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        SiO2_Drude.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         SiO2_Drude.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         SiO2_Drude.l_in(i) = Inf;

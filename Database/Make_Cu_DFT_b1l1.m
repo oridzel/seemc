@@ -68,7 +68,8 @@ for i = 1:length(E0)
         energy = E0(i) - Cu_DFT_b1l1.Ef;
         osc.eloss = eps:(energy-eps)/(N-1):energy;
         Cu_DFT_b1l1.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Cu_DFT_b1l1.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i),elf,q,omega);
+        [iimfp, diimfp] = ndiimfp(osc,E0(i),elf,q,omega);
+        Cu_DFT_b1l1.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         Cu_DFT_b1l1.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Cu_DFT_b1l1.l_in(i) = Inf;

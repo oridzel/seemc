@@ -1,10 +1,10 @@
 clear
 
-inputpar.matName = { 'SiO2_Drude' };
+inputpar.matName = { 'SiO2_MLL' };
 inputpar.isMetal = { false };
 % inputpar.thickness = 50;
 inputpar.numTrajectories = 1000;
-inputpar.energy = [20:10:100 200 500 700 1000];
+inputpar.energy = [50:10:100 200:50:500 600:100:1000];
 
 s = SEEMC(inputpar);
 s.onlyEscaped = true;

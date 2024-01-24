@@ -44,7 +44,7 @@ if strcmp( osc.model,'Drude')
         [epsDrud_re, epsDrud_im] = Drude(q,w,osc.Om(j),osc.G(j),osc.alpha,osc.Ef);
         eps_re = eps_re - osc.A(j)*epsDrud_re;
         if gapEffect
-            ind = bsxfun(@gt,w,osc.egap);
+            ind = w > osc.egap;
             eps_im(ind,:) = eps_im(ind,:) + osc.A(j)*epsDrud_im(ind,:);
         else
             eps_im = eps_im + osc.A(j)*epsDrud_im;
@@ -82,24 +82,6 @@ elseif strcmp( osc.model,'DrudeLindhard')
     if gapEffect
         ELF(w<osc.egap,:) = 0;
     end
-  
-%     eps_re = zeros(size(q));
-%     eps_im = zeros(size(q));
-%     for j=1:length(osc.A)
-%         [epsDrud_re, epsDrud_im] = DrudeLindhard(q,w,osc.Om(j),osc.G(j),osc.alpha,osc.Ef);
-%         eps_re = eps_re + osc.A(j)*epsDrud_re;
-%         ind = bsxfun(@gt,w,osc.egap);
-%         eps_im(ind,:) = eps_im(ind,:) + osc.A(j)*epsDrud_im(ind,:);
-%     end
-%     if strcmp(interface,'bulk')
-%         if xraypath
-%             ELF = get_henke_data(eps_im);
-%         else
-%             ELF = eps_im;
-%         end
-%     elseif strcmp(interface,'surface')
-%         error('The DrudeLindhard model cannot be used for surface calculations');
-%     end
 elseif strcmp( osc.model,'Mermin')
     eps1 = zeros(size(q));
     for j=1:length(osc.A)

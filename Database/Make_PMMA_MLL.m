@@ -39,17 +39,18 @@ for i = 1:numel(E0)
 end
 
 %% Inelastic properties
+
 osc.model = 'MerminLL';
-osc.A = [0.051 0.015 0.027 0.127 0.064 0.082 0.062 0.054 0.013 0.051];
-osc.G = [3.643 3.738 8.807 5.642 6.574 6.611 10.34 5.81 99.853 50.905];
-osc.Om = [19.775 12.393 13.349 17.467 27.394 23.308 27.497 22.304 62.506 46.496];
+osc.A = [0.06 0.04 0.06 0.16 0.05 0.07 0.08 0.06 0.01 0.02];
+osc.G = [3.61  3.87  8.88  5.81  5.57  6.31 10.03  5.51 29.96 29.82];
+osc.Om = [19.88 12.40 13.24 17.34 27.12 23.24 27.66 22.36 62.55 46.31];
+osc.u = 6.2212;
 osc.alpha = 1; 
 osc.beps = 1;
 osc.Ef = PMMA_MLL.Evb; 
 osc.qtran = 0.01:0.01:20;
 osc.eloss = eps:.1:110;
 osc.egap = PMMA_MLL.Eg;
-osc.u = 4.7;
 
 PMMA_MLL.ELF = eps_sum_allwq(osc,'bulk');
 PMMA_MLL.eloss = osc.eloss;
@@ -61,7 +62,8 @@ for i = 1:length(E0)
         energy = E0(i) - PMMA_MLL.Eg - PMMA_MLL.Evb;
         osc.eloss = PMMA_MLL.Eg:(energy-PMMA_MLL.Eg)/(N-1):energy;
         PMMA_MLL.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, PMMA_MLL.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        PMMA_MLL.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         PMMA_MLL.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PMMA_MLL.l_in(i) = Inf;

@@ -57,7 +57,8 @@ for i = 1:length(E0)
         energy = E0(i) - Ag.Ef;
         osc.eloss = eps:(energy-eps)/(N-1):energy;
         Ag.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, Ag.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        Ag.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         Ag.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Ag.l_in(i) = Inf;

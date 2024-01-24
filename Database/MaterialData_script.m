@@ -8,7 +8,7 @@ ind = strfind(current_full_path(1).file,current_file_name(1).file);
 load MaterialData.mat
 
 % MaterialData.Au = Make_Au;
-% MaterialData.Au_DL = Make_Au_DL;
+MaterialData.Au_FPA = Make_Au_FPA;
 % MaterialData.Cu = Make_Cu;
 % MaterialData.Cu_DFT_b0l0 = Make_Cu_DFT_b0l0;
 % MaterialData.Cu_DFT_b1l0 = Make_Cu_DFT_b1l0;
@@ -19,10 +19,10 @@ load MaterialData.mat
 % MaterialData.PMMA_Drude = Make_PMMA_Drude;
 % MaterialData.PMMA_MLL = Make_PMMA_MLL;
 % MaterialData.PS_Drude = Make_PS_Drude;
-MaterialData.PS_MLL = Make_PS_MLL;
+% MaterialData.PS_MLL = Make_PS_MLL;
 % MaterialData.SiO2_Drude = Make_SiO2_Drude;
+% MaterialData.SiO2_MLL = Make_SiO2_MLL;
 % MaterialData.Si = Make_Si;
-% MaterialData.Si_DL = Make_Si_DL;
 % MaterialData.Si_DFT_b0l0 = Make_Si_DFT_b0l0;
 % MaterialData.Si_DFT_b1l0 = Make_Si_DFT_b1l0;
 % MaterialData.Si_DFT_b1l1 = Make_Si_DFT_b1l1;

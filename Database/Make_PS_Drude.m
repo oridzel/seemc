@@ -60,7 +60,8 @@ for i = 1:length(E0)
         energy = E0(i) - PS_Drude.Eg - PS_Drude.Evb;
         osc.eloss = PS_Drude.Eg:(energy-PS_Drude.Eg)/(N-1):energy;
         PS_Drude.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, PS_Drude.DIIMFP(:,2,i)] = ndiimfp(osc,E0(i));
+        [iimfp, diimfp] = ndiimfp(osc,E0(i));
+        PS_Drude.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
         PS_Drude.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PS_Drude.l_in(i) = Inf;
