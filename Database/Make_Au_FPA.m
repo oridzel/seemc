@@ -1,12 +1,11 @@
-function Au_FPA = Make_Au_FPA
+   function Au_FPA = Make_Au_FPA
 
 E0 = [1:100 150:50:500 600:100:2500 2750:250:5000]; % 5500:500:30000];
-N = 2000;
+N = 4000;
 
 %% Basic
 Au_FPA.Mat = 'Au_FPA';
-Au_FPA.M = 196.967;
-Au_FPA.Z = 79;
+Au_FPA.M = 196.967;      
 Au_FPA.Density = 19.32; %g/cm^3
 Au_FPA.Density = Au_FPA.Density*10^-24/Au_FPA.M*6.022*10^23; %#/A^3
 Au_FPA.NvTPP = 11;
@@ -37,9 +36,9 @@ end
 
 %% Inelastic properties
 
-opt_elf = load("../OptimFit/au/au.diel");
-q = 0:0.02:10;
-eloss = eps:.1:110;
+opt_elf = load("../Data/opt/au.diel");
+q = 0:1:10;
+eloss = 0:.5:110;
 
 tic
 [Au_FPA.ELF,~,~] = fpa_vector(q*a0,eloss/h2ev,opt_elf(:,1),opt_elf(:,4));
@@ -52,13 +51,15 @@ for i = 1:length(E0)
     if E0(i) > Au_FPA.Ef
         energy = E0(i) - Au_FPA.Ef;
         eloss = eps:(energy-eps)/(N-1):energy;
+        omega = eps:0.5:energy;
         Au_FPA.DIIMFP(:,1,i) = eloss;
-        [iimfp, Au_FPA.DIIMFP(:,2,i)] = diimfp(E0(i),eloss,opt_elf(:,1),opt_elf(:,4));
-        Au_FPA.l_in(i) = 1/trapz(eloss/h2ev,iimfp)*a0;
+        [iimfp, diimfp_] = diimfp(E0(i),omega,opt_elf(:,1),opt_elf(:,4));
+        Au_FPA.DIIMFP(:,2,i) = interp1(omega,diimfp_,eloss);
+        Au_FPA.l_in(i) = 1/trapz(omega/h2ev,iimfp)*a0;
     else
         Au_FPA.l_in(i) = Inf;
     end
-end
+ end
 
 %% Ionisation shells
 Au_FPA.Shells = {'4S1/2';'4P1/2';'4P3/2';'4D3/2';'4D5/2';'4F5/2';'4F7/2';'5S1/2';'5P1/2';'5P3/2';'5D3/2';'5D5/2';'6S1/2';};

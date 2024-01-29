@@ -1,11 +1,11 @@
 function [elf,elf_pl,elf_se] = fpa_vector(q,omega,optical_omega,optical_elf)
 
 q(isnan(q)) = 0;
-omega_pl = eps:0.01:1e4;
+omega_pl = 0:0.01:5000;
 omega_pl = omega_pl/h2ev;
 elf_pl = zeros(length(omega),size(q,2));
 elf_se = zeros(length(omega),size(q,2));
-omega_0 = zeros(size(omega));
+omega_0 = zeros(length(omega),size(q,2));
 
 for i = 1:size(q,2)
     epsilon = lindhard(q(:,i),omega,omega_pl);
@@ -18,25 +18,38 @@ for i = 1:size(q,2)
 
     for j = 1:length(omega)
         if size(q,1) > 1
-            guess_interval = [0,min(omega(j),abs(q(j,i)/2-omega(j)/q(j,i))) + 1e-5];
-            fun = @(x) real_lindhard(q(j,i),omega(j),x);
+            current_q = q(j,i);
         else
-            guess_interval = [0,min(omega(j),abs(q(i)/2-omega(j)/q(i))) + 1e-5];
-            fun = @(x) real_lindhard(q(i),omega(j),x);
+            current_q = q(i);
         end
+        if current_q == 0
+            guess_interval = [0,omega(j) + 0.1];
+        else
+            guess_interval = [0,min(omega(j),abs(current_q/2-omega(j)/current_q))];
+        end
+        fun = @(x) real_lindhard(q(i),omega(j),x);
         try
-            omega_0(j) = fzero(fun,guess_interval);
+            omega_0(j,i) = fzero(fun,guess_interval);
         catch
-            omega_0(j) = 0;
-        end        
+            omega_0(j,i) = find_zero(omega_pl,real(epsilon),fun);
+        end       
     end
 
-    elf_pl(:,i) = g_coef(omega_0,optical_omega,optical_elf)' .* pi./abs(d_epsilon_real(q(:,i),omega',omega_0')) .* heaviside(q_minus(omega',omega_0') - q(:,i)); 
+    elf_pl(:,i) = g_coef(omega_0(:,i),optical_omega,optical_elf) .* pi./abs(d_epsilon_real(q(:,i),omega',omega_0(:,i))) .* heaviside(q_minus(omega',omega_0(:,i)) - q(:,i)); 
     elf_pl(isnan(elf_pl)) = 0;
     
     elf_se(:,i) = trapz(omega_pl,se,2);
     elf = elf_pl + elf_se;
 end
+
+    function val = find_zero(x,y,fun)
+        val = 0;
+        if any(y < 0)
+            ind = find(y < 0,1);
+            % val = x(ind(1)-1) + (x(ind(1)) - x(ind(1)-1))/2;
+            val = fzero(fun,[x(ind(1)-1) x(ind(1))]);
+        end
+    end
 
     function val = real_lindhard(q,omega,omega_pl)
         epsilon_lindhard = lindhard(q,omega,omega_pl);
@@ -71,15 +84,19 @@ end
         kf = k_f(omega_pl);
         x = 2*omega' ./ kf.^2;
         z = q ./ (2*kf);
-        u = x ./ (4*z);
+
+        x(isnan(x)) = 0;
+        x(isinf(x)) = 0;
+        z(isnan(z)) = 0;        
     
-        if all(all(isnan(u)))
+        if all(all(x == 0))
             epsilon_real = ones(size(omega_pl));
             epsilon_imag = zeros(size(omega_pl));
-        elseif all(all(z == 0)) && all(all(x ~= 0))
-            epsilon_real = 1 - 16 ./ (3*kf*pi.*x.^2);
+        elseif all(all(z == 0))
+            epsilon_real = 1 - 16 ./ (3*kf*pi.*x.^2); 
             epsilon_imag = zeros(size(epsilon_real));
         else
+            u = x ./ (4*z);
             epsilon_real = 1 + 1./(pi.*kf.*z.^2) .* ( 1/2 + 1./(8*z).*(f(z - u) + f(z + u)) );
             ind = z == 0;
             e_1 = 1 - 16 ./ (3*kf*pi.*x.^2);
@@ -110,11 +127,21 @@ end
         
             if any(unique(ind_2))
                 e_1 = 1 - 16 ./ (3*kf*pi.*x.^2) - 256*z.^2 ./ (5*kf*pi.*x.^4) - 256*z.^4 ./ (3*kf*pi.*x.^4);
-                epsilon_real(ind_2) = e_1(ind_2);
+                epsilon_real(ind_2) = e_1(ind_2); 
                 epsilon_imag(ind_2) = 0;
             end
         end
-        
+        ind = x == 0;
+        epsilon_real(ind) = 1;
+        epsilon_imag(ind) = 0;
+
+        ind = z == 0 & x ~= 0;
+        if any(unique(ind))
+            e_1 = 1 - 16 ./ (3*kf*pi.*x.^2);
+            epsilon_real(ind) = e_1(ind);
+            epsilon_imag(ind) = 0;
+        end
+
         epsilon = complex(epsilon_real,epsilon_imag);
     end
     
@@ -137,7 +164,7 @@ end
     
     function g = g_coef(omega_pl,optical_omega,optical_elf)  
         g = 2./(pi*omega_pl) .* interp1(optical_omega,optical_elf,omega_pl*h2ev);
-        g(omega_pl < optical_omega(1)) = eps;
+        g(omega_pl*h2ev < optical_omega(1)) = eps;
     end
 
 end

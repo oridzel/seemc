@@ -1,6 +1,6 @@
 clear
 
-inputpar.matName = { 'SiO2_MLL' };
+inputpar.matName = { 'Si' };
 inputpar.isMetal = { false };
 % inputpar.thickness = 50;
 inputpar.numTrajectories = 1000;
