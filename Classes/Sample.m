@@ -1,7 +1,6 @@
 classdef Sample
     properties
         Name
-        isMetal    
     end
     properties (Constant)
         kbt = 9.445e-4
@@ -10,7 +9,7 @@ classdef Sample
         MaterialData
     end
     methods
-        function obj = Sample(MatName,isMetal)
+        function obj = Sample(MatName)
             ps = inputParser;
             ps.FunctionName = 'Sample';
             MatNameValidation = @(x) (iscell(x) && isscalar(x) && ischar(x{1})) || ischar(x);
@@ -18,7 +17,6 @@ classdef Sample
             ps.parse(MatName);
 
             obj.Name = char(ps.Results.MatName);
-            obj.isMetal = isMetal;
         end
 
         function decs = getDECS(obj,energy)
@@ -27,7 +25,7 @@ classdef Sample
 
         function [eloss,diimfp] = getDIIMFP(obj,energy)
             diimfp = interp1(obj.MaterialData.DECS.E0,squeeze(obj.MaterialData.DIIMFP(:,2,:))',energy);
-            if obj.isMetal
+            if obj.MaterialData.isMetal
                 energy = energy - obj.MaterialData.Ef;
                 eloss = eps:(energy-eps)/(length(obj.MaterialData.DIIMFP(:,1,1))-1):energy;
             else
@@ -39,7 +37,7 @@ classdef Sample
         function [theta,dist] = getAngularIIMFP(obj,energy,eloss)
             theta = linspace(0,pi/2,100);            
             eloss = eloss/h2ev;
-            if obj.isMetal
+            if obj.MaterialData.isMetal
                 energy = energy/h2ev;
             else
                 energy = (energy - obj.MaterialData.Eg)/h2ev;

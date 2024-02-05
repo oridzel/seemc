@@ -1,7 +1,7 @@
 clear
 
 inputpar.matName = { 'Cu_FPA' };
-inputpar.isMetal = { true };
+inputpar.theta_0 = 0;
 % inputpar.thickness = 50;
 inputpar.numTrajectories = 10000;
 inputpar.energy = [50:10:100 200:50:500 600:100:1000];

@@ -11,7 +11,7 @@ classdef Electron < handle
         xyz(1,3) double {mustBeReal} = [0,0,0]
         uvw(1,3) double {mustBeReal} = [0,0,1]
         coordinates {mustBeReal}
-        saveCoordinates = false
+        trackCoordinates = false
         isSecondary = false
         Generation = 0 % Primary electron
         ParentIndex = 0 % Primary electron
@@ -21,6 +21,7 @@ classdef Electron < handle
         nSecondaries = 0
         EnergySE
         ConductionBandreference = false
+        IncidentAngle = 0
     end
     properties (Dependent)
         IIMFP
@@ -29,33 +30,46 @@ classdef Electron < handle
         ITMFP
     end
     methods
-        function obj = Electron(e,layers,cbRef,saveCoord,xyz,uvw,gen,se,ind)
-            obj.Layers = layers;
+        function obj = Electron(energy,layers,varargin)
+            p = inputParser;
+            validScalarPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
+            addRequired(p,'energy',validScalarPosNum);
+            addRequired(p,'layers');
+            addOptional(p,'theta',obj.IncidentAngle,@(x) isnumeric(x) && isscalar(x) && (x >= 0) && (x <= pi));
+            addOptional(p,'cbRef',obj.ConductionBandreference);
+            addOptional(p,'trackCoordinates',obj.trackCoordinates);
+            addOptional(p,'xyz',obj.xyz);
+            addOptional(p,'uvw',obj.uvw);
+            addOptional(p,'generation',obj.Generation);
+            addOptional(p,'isSecondary',obj.isSecondary);
+            addOptional(p,'index',obj.ParentIndex);
+            parse(p,energy,layers,varargin{:});
+
+            obj.IncidentAngle = p.Results.theta;
+            obj.Layers = p.Results.layers;
             if length(layers) == 2
                 obj.multiLayer = true;
             end
-            obj.ConductionBandreference = cbRef;
-            if obj.Layers(1).Material.isMetal
+            obj.ConductionBandreference = p.Results.cbRef;
+            if obj.Layers(1).Material.MaterialData.isMetal
                 obj.InnerPotential = obj.Layers(1).Material.MaterialData.Ef + obj.Layers(1).Material.MaterialData.Wf;
             else
                 obj.InnerPotential = obj.Layers(1).Material.MaterialData.Affinity + obj.Layers(1).Material.MaterialData.Evb + obj.Layers(1).Material.MaterialData.Eg;
             end
-            if nargin > 4
-                obj.xyz = xyz;
-                obj.uvw = uvw;
-                obj.Generation = gen;
-                obj.isSecondary = se;
-                obj.ParentIndex = ind;
-            end
-            
-            if ~obj.isSecondary
-                obj.Energy = e + obj.InnerPotential;
+            obj.isSecondary = p.Results.isSecondary;
+            obj.xyz = p.Results.xyz;
+            obj.Generation = p.Results.generation;
+            obj.ParentIndex = p.Results.index;
+            if obj.isSecondary
+                obj.uvw = p.Results.uvw;
+                obj.Energy = p.Results.energy;
             else
-                obj.Energy = e;
+                obj.Energy = p.Results.energy + obj.InnerPotential;
+                theta_0 = asin(sin(p.Results.theta)*sqrt(obj.Energy/(obj.Energy + obj.InnerPotential)));
+                obj.uvw = [sin(theta_0),0,cos(theta_0)];
             end
-
-            if saveCoord
-                obj.saveCoordinates = true;
+            obj.trackCoordinates = p.Results.trackCoordinates;
+            if obj.trackCoordinates
                 obj.coordinates(1,:) = [obj.xyz,obj.Energy];
             end
         end
@@ -84,7 +98,7 @@ classdef Electron < handle
             obj.xyz(1) = obj.xyz(1) + obj.uvw(1)*s;
             obj.xyz(2) = obj.xyz(2) + obj.uvw(2)*s;
             obj.xyz(3) = obj.xyz(3) + obj.uvw(3)*s;
-            if obj.saveCoordinates
+            if obj.trackCoordinates
                 obj.coordinates(end+1,:) = [obj.xyz,obj.Energy];
             end
         end
@@ -122,14 +136,14 @@ classdef Electron < handle
                     end
                 end
                 loss = true;
-                if obj.Layers(obj.currentLayer).Material.isMetal
+                if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
                     obj.EnergySE = fegdos(obj.EnergyLoss,obj.Layers(obj.currentLayer).Material.MaterialData.Ef);
                 else
                     obj.EnergySE = fegdos(obj.EnergyLoss,obj.Layers(obj.currentLayer).Material.MaterialData.Evb);
                 end
                 obj.Energy = obj.Energy - obj.EnergyLoss;
                 obj.died;
-                if obj.Layers(obj.currentLayer).Material.isMetal
+                if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
                     min_energy = 1;
                 else
                     min_energy = obj.Layers(obj.currentLayer).Material.MaterialData.Eg;
@@ -164,7 +178,7 @@ classdef Electron < handle
         function escape(obj)
             if ~obj.Dead
                 if obj.xyz(end) < 0
-                    if ~obj.Layers(1).Material.isMetal && obj.ConductionBandreference
+                    if ~obj.Layers(1).Material.MaterialData.isMetal && obj.ConductionBandreference
                         ecos = (obj.Energy - obj.Layers(1).Material.MaterialData.Eg - obj.Layers(1).Material.MaterialData.Evb)*obj.uvw(3)^2;
                         ui = obj.Layers(1).Material.MaterialData.Affinity;
                     else
@@ -186,7 +200,7 @@ classdef Electron < handle
                             obj.uvw(2) = obj.uvw(2)*xyd/old_xyd;
                         end
                         obj.Energy = obj.Energy - obj.InnerPotential;
-                        if obj.saveCoordinates
+                        if obj.trackCoordinates
                             x = obj.xyz(1) + 100*obj.uvw(1);
                             y = obj.xyz(2) + 100*obj.uvw(2);
                             z = obj.xyz(3) + 100*obj.uvw(3);
@@ -195,7 +209,7 @@ classdef Electron < handle
                     else
                         obj.uvw(end) = -1*obj.uvw(end);
                         obj.xyz(end) = -1*obj.xyz(end);
-                        if obj.saveCoordinates
+                        if obj.trackCoordinates
                             obj.coordinates(end,:) = [obj.xyz(1),obj.xyz(2),-obj.xyz(3),obj.Energy];
                         end
                     end
@@ -258,7 +272,7 @@ classdef Electron < handle
             val = 1/obj.Layers(obj.currentLayer).Material.getIMFP(obj.Energy);
         end
         function val = get.IEMFP(obj)
-            if obj.Layers(obj.currentLayer).Material.isMetal
+            if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
                 val = 1/obj.Layers(obj.currentLayer).Material.getEMFP(obj.Energy);
             else
                 val = 1/obj.Layers(obj.currentLayer).Material.getEMFP(obj.Energy - ...
@@ -266,7 +280,7 @@ classdef Electron < handle
             end
         end
         function val = get.IPHMFP(obj)
-            if ~obj.Layers(obj.currentLayer).Material.isMetal
+            if ~obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
                 val = obj.Layers(obj.currentLayer).Material.getIPHMFP(obj.Energy - ...
                     obj.Layers(obj.currentLayer).Material.MaterialData.Eg - obj.Layers(obj.currentLayer).Material.MaterialData.Evb);
             else

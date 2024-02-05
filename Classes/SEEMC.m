@@ -2,7 +2,7 @@ classdef SEEMC < handle
     properties
         numTrajectories = 1000
         matName = 'Au'
-        isMetal = true
+        theta_0 = 0
         cbRef = false
         trackTrajectories = false
         energyArray
@@ -19,20 +19,20 @@ classdef SEEMC < handle
     methods
         function obj = SEEMC(inputpar)
             obj.matName = inputpar.matName;
-            obj.isMetal = inputpar.isMetal;
+            obj.theta_0 = inputpar.theta_0;
             obj.numTrajectories = inputpar.numTrajectories;
             obj.energyArray = inputpar.energy;
 
             if length(obj.matName) == 1
-                obj.layers = Layer(Sample(obj.matName{1},obj.isMetal{1}));
+                obj.layers = Layer(Sample(obj.matName{1}));
             elseif length(obj.matName) > 1
                 if ~isfield(inputpar,'thickness') || length(inputpar.thickness) ~= length(obj.matName)-1
                     error('Set thickness for each layer');
                 end
                 for i = 1:length(obj.matName)-1
-                    obj.layers(i) = Layer(Sample(obj.matName{i},obj.isMetal{i}),inputpar.thickness(i));
+                    obj.layers(i) = Layer(Sample(obj.matName{i}),inputpar.thickness(i));
                 end
-                obj.layers(length(obj.matName)) = Layer(Sample(obj.matName{i},obj.isMetal{i}));
+                obj.layers(length(obj.matName)) = Layer(Sample(obj.matName{i}));
             end
         end
         function simulate(obj)
@@ -45,17 +45,18 @@ classdef SEEMC < handle
             cb = obj.cbRef;
             stat = cell(size(energy_array));
             saveEscaped = obj.onlyEscaped;
+            theta = obj.theta_0;
 
             for e = 1:numel(energy_array)
                 % h = waitbar(0, 'Starting...',Name=['Simulation for E = ',num2str(energy_array(e)),' eV']);
-                energy = energy_array(e);
+                energy = energy_array(e); 
                 disp(energy)
                 electronData = cell(n_traj,1);       
                 parfor i = 1:n_traj
                     % waitbar(i/n_traj, h, ['Progress: ', num2str(floor(i/n_traj*100)),'%']);
                     e_count = 0;
                     res = Electron.empty;
-                    res(end+1) = Electron(energy,lyrs,cb,track);
+                    res(end+1) = Electron(energy,lyrs,'cbRef',cb,'trackCoordinates',track,'theta',theta);
                     while e_count < length(res)
                         e_count = e_count + 1;
                         while res(e_count).Inside && ~res(e_count).Dead
@@ -70,7 +71,8 @@ classdef SEEMC < handle
                                         %         sin(acos(2*rand-1))*sin(2*rand*pi),...
                                         %         cos(acos(2*rand-1)) ];
                                         uvw = updateDirection(res(e_count).uvw,[asin(cos(res(e_count).Deflection(1))),res(e_count).Deflection(2) + pi],1);
-                                        res(end + 1) = Electron(e_se,lyrs,cb,track,res(e_count).xyz,uvw,res(e_count).nSecondaries+1,true,e_count);
+                                        res(end + 1) = Electron(e_se,lyrs,'cbRef',cb,'trackCoordinates',track,'xyz',res(e_count).xyz,...
+                                                                'uvw',uvw,'generation',res(e_count).nSecondaries+1,'isSecondary',true,'index',e_count);
                                         res(e_count).nSecondaries = res(e_count).nSecondaries + 1;
                                     end
                                 end
