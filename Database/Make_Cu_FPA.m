@@ -49,27 +49,42 @@ osc.qtran = 0.01:0.01:20;
 osc.eloss = eps:.5:110;
 osc.egap = eps;
 
-opt_elf = load("C:/Users/onr5/OneDrive - NIST/dev/seemc/Data/opt/cu.diel");
+current_full_path = dbstack('-completenames');
+current_file_name = dbstack;
+if ispc
+    ind = strfind(current_full_path(1).file,['Database\' current_file_name(1).file]);
+    dirData = [current_full_path(1).file(1:ind-2) filesep 'Data\'];
+elseif ismac || isunix
+    ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
+    dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
+end
+
+% opt_elf = load([dirData '/opt/cu.diel']);
 % q = 0:0.1:10;
 % eloss = 0:.5:200;
-tic
-load cu_fpa_elf.mat
+% tic
 % [Cu_FPA.ELF,~,~] = fpa_vector(q*a0,eloss/h2ev,opt_elf(:,1),opt_elf(:,4));
-toc
-Cu_FPA.eloss = omega;
-Cu_FPA.q = q;
-Cu_FPA.ELF = elf;
+% toc
+fpa_data = load([dirData 'elf_cu_fpa.mat']);
+Cu_FPA.eloss = fpa_data.omega;
+Cu_FPA.q = fpa_data.q;
+Cu_FPA.ELF = fpa_data.elf;
 Cu_FPA.DIIMFP = zeros(N,2,numel(E0));
 Cu_FPA.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > Cu_FPA.Ef
         energy = E0(i) - Cu_FPA.Ef;
         eloss = eps:(energy-eps)/(N-1):energy;
-        omega = eps:0.2:energy;
+        if energy < 10
+            omega = eps:0.01:energy;
+        else
+            omega = eps:0.2:energy;
+        end
         Cu_FPA.DIIMFP(:,1,i) = eloss;
         [iimfp, diimfp_] = diimfp_interp_fpa(E0(i),omega,Cu_FPA.ELF,Cu_FPA.q,Cu_FPA.eloss,osc);
         Cu_FPA.DIIMFP(:,2,i) = interp1(omega,diimfp_,eloss);
-        % Cu_FPA.DIIMFP(:,2,i) = diimfp_interp./trapz(eloss,diimfp_interp);
+        ind = isnan(Cu_FPA.DIIMFP(:,2,i));
+        Cu_FPA.DIIMFP(ind,2,i) = diimfp_(end);
         Cu_FPA.l_in(i) = 1/trapz(omega/h2ev,iimfp)*a0;
     else
         Cu_FPA.l_in(i) = Inf;
