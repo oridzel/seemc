@@ -1,9 +1,9 @@
 clear
 
-inputpar.matName = { 'Si' };
-inputpar.isMetal = { false };
+inputpar.matName = { 'Cu_FPA' };
+inputpar.isMetal = { true };
 % inputpar.thickness = 50;
-inputpar.numTrajectories = 1000;
+inputpar.numTrajectories = 10000;
 inputpar.energy = [50:10:100 200:50:500 600:100:1000];
 
 s = SEEMC(inputpar);

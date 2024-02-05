@@ -8,8 +8,9 @@ ind = strfind(current_full_path(1).file,current_file_name(1).file);
 load MaterialData.mat
 
 % MaterialData.Au = Make_Au;
-MaterialData.Au_FPA = Make_Au_FPA;
+% MaterialData.Au_FPA = Make_Au_FPA;
 % MaterialData.Cu = Make_Cu;
+MaterialData.Cu_FPA = Make_Cu_FPA;
 % MaterialData.Cu_DFT_b0l0 = Make_Cu_DFT_b0l0;
 % MaterialData.Cu_DFT_b1l0 = Make_Cu_DFT_b1l0;
 % MaterialData.Cu_DFT_b1l1 = Make_Cu_DFT_b1l1;

@@ -4,7 +4,11 @@ function [iimfp,x_in] = diimfp(E0,eloss,optical_eloss,optical_elf,is_metal,egap,
         egap = 0;
     end
 
-    E0 = (E0 - egap)/h2ev;
+    if is_metal
+        E0 = E0/h2ev;
+    else
+        E0 = (E0 - egap)/h2ev;
+    end
     omega = eloss/h2ev;
     n_q = 100;   
     C = 137.036; % a.u.

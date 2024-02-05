@@ -47,10 +47,12 @@ classdef SEEMC < handle
             saveEscaped = obj.onlyEscaped;
 
             for e = 1:numel(energy_array)
+                % h = waitbar(0, 'Starting...',Name=['Simulation for E = ',num2str(energy_array(e)),' eV']);
                 energy = energy_array(e);
                 disp(energy)
-                electronData = cell(n_traj,1);            
+                electronData = cell(n_traj,1);       
                 parfor i = 1:n_traj
+                    % waitbar(i/n_traj, h, ['Progress: ', num2str(floor(i/n_traj*100)),'%']);
                     e_count = 0;
                     res = Electron.empty;
                     res(end+1) = Electron(energy,lyrs,cb,track);

@@ -1,7 +1,7 @@
 function [elf,elf_pl,elf_se] = fpa_vector(q,omega,optical_omega,optical_elf)
 
 q(isnan(q)) = 0;
-omega_pl = 0:0.01:5000;
+omega_pl = 0:0.01:3000;
 omega_pl = omega_pl/h2ev;
 elf_pl = zeros(length(omega),size(q,2));
 elf_se = zeros(length(omega),size(q,2));
@@ -83,40 +83,39 @@ end
     function epsilon = lindhard(q,omega,omega_pl)
         kf = k_f(omega_pl);
         x = 2*omega' ./ kf.^2;
-        z = q ./ (2*kf);
-
         x(isnan(x)) = 0;
-        x(isinf(x)) = 0;
+        z = q ./ (2*kf);
         z(isnan(z)) = 0;        
     
         if all(all(x == 0))
-            epsilon_real = ones(size(omega_pl));
-            epsilon_imag = zeros(size(omega_pl));
+            epsilon_real = ones(size(x));
+            epsilon_imag = zeros(size(x));
         elseif all(all(z == 0))
             epsilon_real = 1 - 16 ./ (3*kf*pi.*x.^2); 
-            epsilon_imag = zeros(size(epsilon_real));
+            epsilon_imag = zeros(size(x));
         else
             u = x ./ (4*z);
-            epsilon_real = 1 + 1./(pi.*kf.*z.^2) .* ( 1/2 + 1./(8*z).*(f(z - u) + f(z + u)) );
-            ind = z == 0;
-            e_1 = 1 - 16 ./ (3*kf*pi.*x.^2);
-            epsilon_real(ind) = e_1(ind);
             coef = 1 ./ (8*kf.*z.^3);
-            epsilon_imag = zeros(size(epsilon_real));
-            ind_1 = x > 0 & x < 4*z.*(1 - z);
-            ind_2 = x > abs(4*z.*(1 - z)) & x < 4*z.*(1 + z);
-            if any(unique(ind_1))
-                e_2 = coef.*x;
-                epsilon_imag(ind_1) = e_2(ind_1);
-            end
-            if any(unique(ind_2))
-                e_2 = coef.*(1 - (z - u).^2);
-                epsilon_imag(ind_2) = e_2(ind_2);
-            end
-        
             ind_1 = u < 0.01;
             u_over_z = u./(z+1);
             ind_2 = u_over_z > 100;
+            ind_not = ~ind_1 & ~ind_2;
+            epsilon_real = ones(size(x));
+            e_1 = (1 + 1./(pi.*kf.*z.^2) .* ( 1/2 + 1./(8*z).*(f(z - u) + f(z + u)) ));
+            epsilon_real(ind_not) = e_1(ind_not);     
+            epsilon_imag = zeros(size(epsilon_real));
+            epsilon_real(isnan(epsilon_real)) = 1;
+
+            ind_1_ = x > 0 & x < 4*z.*(1 - z);
+            ind_2_ = x > abs(4*z.*(1 - z)) & x < 4*z.*(1 + z);
+            if any(unique(ind_1_))
+                e_2 = coef.*x;
+                epsilon_imag(ind_1_) = e_2(ind_1_);
+            end
+            if any(unique(ind_2_))
+                e_2 = coef.*(1 - (z - u).^2);
+                epsilon_imag(ind_2_) = e_2(ind_2_);
+            end
         
             if any(unique(ind_1))
                 e_1 = 1 + 1./(pi.*kf.*z.^2) .* ( 1/2 + 1./(4*z).*( (1 - z.^2 - u.^2).*log(abs((z+1)./(z-1))) + (z.^2 - u.^2 - 1)*2.*u.^2.*z./((z.^2 - 1).^2) ) );
@@ -124,6 +123,7 @@ end
                 epsilon_real(ind_1) = e_1(ind_1);
                 epsilon_imag(ind_1) = e_2(ind_1);
             end
+            epsilon_real(isnan(epsilon_real)) = 1;
         
             if any(unique(ind_2))
                 e_1 = 1 - 16 ./ (3*kf*pi.*x.^2) - 256*z.^2 ./ (5*kf*pi.*x.^4) - 256*z.^4 ./ (3*kf*pi.*x.^4);
@@ -141,6 +141,8 @@ end
             epsilon_real(ind) = e_1(ind);
             epsilon_imag(ind) = 0;
         end
+
+        epsilon_real(isnan(epsilon_real)) = 1;
 
         epsilon = complex(epsilon_real,epsilon_imag);
     end

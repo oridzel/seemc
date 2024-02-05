@@ -1,7 +1,7 @@
-   function Au_FPA = Make_Au_FPA
+function Au_FPA = Make_Au_FPA
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000]; % 5500:500:30000];
-N = 4000;
+E0 = [1:100 150:50:500];% 600:100:2500 2750:250:5000]; % 5500:500:30000];
+N = 2000;
 
 %% Basic
 Au_FPA.Mat = 'Au_FPA';
@@ -36,9 +36,9 @@ end
 
 %% Inelastic properties
 
-opt_elf = load("../Data/opt/au.diel");
-q = 0:1:10;
-eloss = 0:.5:110;
+opt_elf = load("C:/Users/onr5/OneDrive - NIST/dev/seemc/Data/opt/au.diel");
+q = 0:0.1:10;
+eloss = 0:.5:500;
 
 tic
 [Au_FPA.ELF,~,~] = fpa_vector(q*a0,eloss/h2ev,opt_elf(:,1),opt_elf(:,4));
@@ -53,8 +53,10 @@ for i = 1:length(E0)
         eloss = eps:(energy-eps)/(N-1):energy;
         omega = eps:0.5:energy;
         Au_FPA.DIIMFP(:,1,i) = eloss;
-        [iimfp, diimfp_] = diimfp(E0(i),omega,opt_elf(:,1),opt_elf(:,4));
-        Au_FPA.DIIMFP(:,2,i) = interp1(omega,diimfp_,eloss);
+        % [iimfp, diimfp_] = diimfp(E0(i),omega,opt_elf(:,1),opt_elf(:,4));
+        [iimfp, diimfp_] = diimfp_interp_fpa(E0(i),omega,Au_FPA.ELF,Au_FPA.q,Au_FPA.eloss);
+        diimfp_interp = interp1(omega,diimfp_,eloss);
+        Au_FPA.DIIMFP(:,2,i) = diimfp_interp./trapz(eloss,diimfp_interp);
         Au_FPA.l_in(i) = 1/trapz(omega/h2ev,iimfp)*a0;
     else
         Au_FPA.l_in(i) = Inf;

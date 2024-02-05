@@ -92,7 +92,7 @@ classdef Electron < handle
             rn = rand;
             if rn < obj.IEMFP/obj.ITMFP
                 obj.ScatteringType = 0;
-            elseif rn < (obj.IEMFP+obj.IIMFP)/obj.ITMFP
+            elseif rn < (obj.IEMFP + obj.IIMFP)/obj.ITMFP
                 obj.ScatteringType = 1;
             else
                 obj.ScatteringType = 2;
@@ -100,19 +100,23 @@ classdef Electron < handle
         end
         function loss = scatter(obj)
             obj.Deflection(2) = rand*2*pi;
+            [~,energy_index] = min(abs(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.E0 - obj.Energy));
             if obj.ScatteringType == 0
                 loss = false;
-                decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
+                % decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
+                decs = obj.Layers(obj.currentLayer).Material.MaterialData.DECS.y(:,energy_index);
                 cumsigma = cumtrapz( obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,2*pi*decs.*sin(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x) );
-                cumsigma = (cumsigma - cumsigma(1))/(cumsigma(end) - cumsigma(1));
-                obj.Deflection(1) = interp1(cumsigma,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
+                % cumsigma = (cumsigma - cumsigma(1))/(cumsigma(end) - cumsigma(1));
+                obj.Deflection(1) = interp1(cumsigma,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand*cumsigma(end));
                 obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
             elseif obj.ScatteringType == 1
-                [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
+                % [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
+                eloss = obj.Layers(obj.currentLayer).Material.MaterialData.DIIMFP(:,1,energy_index);
+                diimfp = obj.Layers(obj.currentLayer).Material.MaterialData.DIIMFP(:,2,energy_index);
                 cumdiimfp = cumtrapz(eloss,diimfp);
-                cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
-                while true
-                    obj.EnergyLoss = interp1(cumdiimfp,eloss,rand);
+                % cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
+                 while true
+                    obj.EnergyLoss = interp1(cumdiimfp,eloss,rand*cumdiimfp(end));
                     if obj.EnergyLoss < obj.Energy
                         break;
                     end

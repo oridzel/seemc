@@ -65,6 +65,8 @@ elseif strcmp( osc.model,'DrudeLindhard')
 %     end
 %     ELF = eps_im;
 elseif strcmp(osc.model,'Mermin')
+    q(q == 0) = 0.01;
+    w(w == 0) = 1e-5;
     eps1 = zeros(numel(w),numel(q));
     for j=1:length(osc.A)
         epsMerm = Mermin(q,w,osc.G(j),osc.Om(j));

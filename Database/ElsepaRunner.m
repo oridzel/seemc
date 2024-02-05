@@ -73,9 +73,9 @@ classdef ElsepaRunner
     
                     El = importdata(f_name_el, DELIMITER, HEADERLINES);
                     a = El.textdata(~cellfun('isempty',regexp(El.textdata,'Total elastic cross section')));
-                    sigma_el(z,i) = str2double(extractBetween(a{1},"cm**2 = "," a0**2"))*a0^2;
+                    sigma_el(z,i) = str2double(extractBetween(a{1},"cm**2 = "," a0**2")); %*a0^2;
                     a = El.textdata(~cellfun('isempty',regexp(El.textdata,'1st transport cross section')));
-                    sigma_tr1(z,i) = str2double(extractBetween(a{1},"cm**2 = "," a0**2"))*a0^2;
+                    sigma_tr1(z,i) = str2double(extractBetween(a{1},"cm**2 = "," a0**2")); %*a0^2;
                     
                     if i == 1 && z == 1 && length(Composition.Z) > 1
                         decs_all = zeros(length(Composition.Z),numel(El.data(:,1)),numel(E0));
@@ -92,7 +92,7 @@ classdef ElsepaRunner
                         Res(i) = data;
                     elseif length(Composition.Z) == 1
                         data.x = El.data(:,1)/180*pi;
-                        data.y = El.data(:,4)*a0^2;
+                        data.y = El.data(:,4); %*a0^2;
                         data.sigma_el = sigma_el(1,i);
                         data.sigma_tr1 = sigma_tr1(1,i);
                         Res(i) = data;
