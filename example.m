@@ -1,16 +1,15 @@
 clear
 
-inputpar = struct;
-inputpar.name = 'Cu_FPA';
-inputpar.theta_0 = 0;
+inputpar.matName = { 'Au_FPA' };
 % inputpar.thickness = 50;
-inputpar.numTrajectories = 10000;
-% inputpar.energy = [50:10:100 200:50:500 600:100:1000];
-inputpar.onlyEscaped = true;
-inputpar.cbRef = false;
-inputpar.trackTrajectories = false;
+inputpar.numTrajectories = 1000;
+inputpar.energy = [50:10:100 200:50:500 600:100:1000];
 
 s = SEEMC(inputpar);
+s.theta_0 = 0;
+s.onlyEscaped = true;
+s.cbRef = false;
+s.trackTrajectories = false;
 
 %% Run simulation
 tic

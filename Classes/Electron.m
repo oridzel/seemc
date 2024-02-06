@@ -151,9 +151,8 @@ classdef Electron < handle
                 if ~obj.Dead && obj.Energy > min_energy
                     [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
                     cumang = cumtrapz(theta, angdist.*sin(theta));
-                    cumang = (cumang - cumang(1))/(cumang(end)-cumang(1));
                     if isfinite(cumang)
-                        obj.Deflection(1) = interp1(cumang,theta,rand);
+                        obj.Deflection(1) = interp1(cumang,theta,rand*cumang(end));
                         obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
                     end
                 end
@@ -223,11 +222,11 @@ classdef Electron < handle
         end
         function testDECSsampling(obj)
             n = 10000;
-            angle = zeros(n);
+            angle = zeros(size(n));
             decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
-            cumdecs = cumtrapz(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,decs);
+            cumdecs = cumtrapz(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,2*pi*decs.*sin(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x));
             for i = 1:n
-                angle(i) = interp1(cumdecs,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand);
+                angle(i) = interp1(cumdecs,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,cumdecs(end)*rand);
             end
             figure
             hold on
@@ -237,7 +236,7 @@ classdef Electron < handle
         end
         function testDIIMFPsampling(obj)
             n = 10000;
-            loss = zeros(n);
+            loss = zeros(size(n));
             [eloss,diimfp] = obj.Layers(obj.currentLayer).Material.getDIIMFP(obj.Energy);
             cumdiimfp = cumtrapz(eloss,diimfp);
             cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
@@ -252,7 +251,7 @@ classdef Electron < handle
         end
         function testAngIIMFPsampling(obj)
             n = 10000;
-            ang = zeros(n);
+            ang = zeros(size(n));
             for i = 1:n
                 [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(500,20);
                 cumang = cumtrapz(theta, angdist);
