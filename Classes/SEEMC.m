@@ -17,11 +17,28 @@ classdef SEEMC < handle
         coordinateArray
     end
     methods
-        function obj = SEEMC(inputpar)
-            obj.matName = inputpar.matName;
-            obj.theta_0 = inputpar.theta_0;
-            obj.numTrajectories = inputpar.numTrajectories;
-            obj.energyArray = inputpar.energy;
+        function obj = SEEMC(varargin)
+            p = inputParser;
+            p.StructExpand = 1;
+            validScalarPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
+            
+            addRequired(p,'numTrajectories',validScalarPosNum);
+            addRequired(p,'name', @(x) mustBeA(x,["string","char"]));
+            addRequired(p,'energy',validScalarPosNum);
+            addRequired(p,'theta',@(x) isnumeric(x) && isscalar(x) && (x >= 0) && (x <= pi));
+            addRequired(p,'thickness',validScalarPosNum);
+            addOptional(p,'trackTrajectories',obj.trackTrajectories);
+            addOptional(p,'cbRef',obj.cbRef);
+            addOptional(p,'onlyEscaped',obj.onlyEscaped);
+            parse(p,varargin{:});
+
+            obj.matName = p.Results.name;
+            obj.theta_0 = p.Results.theta;
+            obj.numTrajectories = p.Results.numTrajectories;
+            obj.energyArray = p.Results.energy;
+            obj.trackTrajectories = p.Results.trackTrajectories;
+            obj.onlyEscaped = p.Results.onlyEscaped;
+            obj.cbRef = p.Results.cbRef;
 
             if length(obj.matName) == 1
                 obj.layers = Layer(Sample(obj.matName{1}));

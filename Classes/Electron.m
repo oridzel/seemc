@@ -34,7 +34,7 @@ classdef Electron < handle
             p = inputParser;
             validScalarPosNum = @(x) isnumeric(x) && isscalar(x) && (x > 0);
             addRequired(p,'energy',validScalarPosNum);
-            addRequired(p,'layers');
+            addRequired(p,'layers',@(x) mustBeA(x,"Layer"));
             addOptional(p,'theta',obj.IncidentAngle,@(x) isnumeric(x) && isscalar(x) && (x >= 0) && (x <= pi));
             addOptional(p,'cbRef',obj.ConductionBandreference);
             addOptional(p,'trackCoordinates',obj.trackCoordinates);

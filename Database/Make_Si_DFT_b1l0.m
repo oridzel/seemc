@@ -1,7 +1,7 @@
 function Si_DFT_b1l0 = Make_Si_DFT_b1l0
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
-N = 5000;
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+N = 4000;
 
 %% Basic
 Si_DFT_b1l0.Mat = 'Si_DFT_b1l0';
@@ -16,14 +16,16 @@ Si_DFT_b1l0.Ep = 16.59;
 Si_DFT_b1l0.Ef = 12.5;
 Si_DFT_b1l0.Evb = 12.44;
 Si_DFT_b1l0.Affinity = 4.05;
+Si_DFT_b1l0.isMetal = false;
 
 %% Elastic properties
+% {
 Si_DFT_b1l0.Elastic.x = zeros(numel(E0),1);
 Si_DFT_b1l0.Elastic.l_el = zeros(numel(E0),1);
 Si_DFT_b1l0.Elastic.l_tr = zeros(numel(E0),1);
 Si_DFT_b1l0.Elastic.x = E0;
 Si_DFT_b1l0.DECS.E0 = E0;
-Si_DFT_b1l0.Composition.Z = 14;
+Si_DFT_b1l0.Composition.Z = Si_DFT_b1l0.Z;
 Si_DFT_b1l0.Composition.index = 1;
 
 tic;
@@ -31,10 +33,12 @@ tic;
 toc
 Si_DFT_b1l0.DECS.x = data(1).x;
 for i = 1:numel(E0)
+    Si_DFT_b1l0.Elastic.sigma_el(i) = data(i).sigma_el;
     Si_DFT_b1l0.Elastic.l_el(i) = 1/data(i).sigma_el/Si_DFT_b1l0.Density;
     Si_DFT_b1l0.Elastic.l_tr(i) = 1/data(i).sigma_tr1/Si_DFT_b1l0.Density;
-    Si_DFT_b1l0.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
+    Si_DFT_b1l0.DECS.y(:,i) = data(i).y;
 end
+%}
 
 %% Inelastic properties
 osc.model = 'Mermin';
@@ -57,20 +61,25 @@ elseif ismac || isunix
     ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
     dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
 end
-load([dirData 'elf_si_dft+bse_ocean_0_01_b1l0.mat'])
-Si_DFT_b1l0.ELF = elf;
-Si_DFT_b1l0.eloss = omega;
-Si_DFT_b1l0.q = q;
+dft_data = load([dirData 'elf_si_dft+bse_ocean_0_01_b1l0.mat']);
+Si_DFT_b1l0.ELF = dft_data.elf;
+Si_DFT_b1l0.eloss = dft_data.omega;
+Si_DFT_b1l0.q = dft_data.q;
 
 Si_DFT_b1l0.DIIMFP = zeros(N,2,numel(E0));
 Si_DFT_b1l0.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > 2*Si_DFT_b1l0.Eg + Si_DFT_b1l0.Evb
         energy = E0(i) - Si_DFT_b1l0.Eg - Si_DFT_b1l0.Evb;
-        osc.eloss = Si_DFT_b1l0.Eg:(energy-Si_DFT_b1l0.Eg)/(N-1):energy;
-        Si_DFT_b1l0.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, diimfp] = ndiimfp(osc,E0(i),elf,q,omega);
-        Si_DFT_b1l0.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
+        eloss = Si_DFT_b1l0.Eg:(energy-Si_DFT_b1l0.Eg)/(N-1):energy;
+        if energy < 10
+            osc.eloss = Si_DFT_b1l0.Eg:0.01:energy;
+        else
+            osc.eloss = Si_DFT_b1l0.Eg:0.2:energy;
+        end
+        Si_DFT_b1l0.DIIMFP(:,1,i) = eloss;
+        [iimfp, diimfp] = ndiimfp(osc,E0(i),Si_DFT_b1l0.ELF,Si_DFT_b1l0.q,Si_DFT_b1l0.eloss);
+        Si_DFT_b1l0.DIIMFP(:,2,i) = interp1(osc.eloss,diimfp,eloss);
         Si_DFT_b1l0.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Si_DFT_b1l0.l_in(i) = Inf;
@@ -80,4 +89,3 @@ end
 %% Ionisation shells
 Si_DFT_b1l0.Shells = {'2S1/2';'2P1/2';'2P3/2';'3S1/2';'3P1/2';};
 Si_DFT_b1l0.EB = [154;104;104;13;8;];
-

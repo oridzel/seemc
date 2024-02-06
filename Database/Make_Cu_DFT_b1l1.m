@@ -1,6 +1,6 @@
 function Cu_DFT_b1l1 = Make_Cu_DFT_b1l1
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
 N = 4000;
 
 %% Basic
@@ -13,6 +13,7 @@ Cu_DFT_b1l1.NvTPP = 11;
 Cu_DFT_b1l1.Ep = 35.87;
 Cu_DFT_b1l1.Ef = 8.7;
 Cu_DFT_b1l1.Wf = 4.65;
+Cu_DFT_b1l1.isMetal = true;
 
 %% Elastic properties
 % {
@@ -29,9 +30,10 @@ tic;
 toc
 Cu_DFT_b1l1.DECS.x = data(1).x;
 for i = 1:numel(E0)
+    Cu_DFT_b1l1.Elastic.sigma_el(i) = data(i).sigma_el;
     Cu_DFT_b1l1.Elastic.l_el(i) = 1/data(i).sigma_el/Cu_DFT_b1l1.Density;
     Cu_DFT_b1l1.Elastic.l_tr(i) = 1/data(i).sigma_tr1/Cu_DFT_b1l1.Density;
-    Cu_DFT_b1l1.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
+    Cu_DFT_b1l1.DECS.y(:,i) = data(i).y;
 end
 %}
 
@@ -45,7 +47,7 @@ osc.beps = 1;
 osc.Ef = Cu_DFT_b1l1.Ef; 
 osc.qtran = 0.01:0.01:20;
 osc.eloss = eps:.1:110;
-osc.egap = eps;
+osc.egap = 0;
 
 current_full_path = dbstack('-completenames');
 current_file_name = dbstack;
@@ -56,20 +58,25 @@ elseif ismac || isunix
     ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
     dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
 end
-load([dirData 'elf_cu_dft+bse_20kp_ocean_0_01_b1l1.mat'])
-Cu_DFT_b1l1.ELF = elf;
-Cu_DFT_b1l1.eloss = omega;
-Cu_DFT_b1l1.q = q;
+dft_data = load([dirData 'elf_cu_dft+bse_20kp_ocean_0_01_b1l1.mat']);
+Cu_DFT_b1l1.ELF = dft_data.elf;
+Cu_DFT_b1l1.eloss = dft_data.omega;
+Cu_DFT_b1l1.q = dft_data.q;
 
 Cu_DFT_b1l1.DIIMFP = zeros(N,2,numel(E0));
 Cu_DFT_b1l1.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > Cu_DFT_b1l1.Ef
         energy = E0(i) - Cu_DFT_b1l1.Ef;
-        osc.eloss = eps:(energy-eps)/(N-1):energy;
-        Cu_DFT_b1l1.DIIMFP(:,1,i) = osc.eloss;
-        [iimfp, diimfp] = ndiimfp(osc,E0(i),elf,q,omega);
-        Cu_DFT_b1l1.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
+        eloss = eps:(energy-eps)/(N-1):energy;
+        if energy < 10
+            osc.eloss = eps:0.01:energy;
+        else
+            osc.eloss = eps:0.2:energy;
+        end
+        Cu_DFT_b1l1.DIIMFP(:,1,i) = eloss;
+        [iimfp, diimfp] = ndiimfp(osc,E0(i),Cu_DFT_b1l1.ELF,Cu_DFT_b1l1.q,Cu_DFT_b1l1.eloss);
+        Cu_DFT_b1l1.DIIMFP(:,2,i) = interp1(osc.eloss,diimfp,eloss);
         Cu_DFT_b1l1.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         Cu_DFT_b1l1.l_in(i) = Inf;

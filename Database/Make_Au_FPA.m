@@ -1,11 +1,12 @@
 function Au_FPA = Make_Au_FPA
 
-E0 = [1:100 150:50:500];% 600:100:2500 2750:250:5000]; % 5500:500:30000];
-N = 2000;
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+N = 4000;
 
 %% Basic
 Au_FPA.Mat = 'Au_FPA';
-Au_FPA.M = 196.967;      
+Au_FPA.M = 196.967;   
+Au_FPA.Z = 79;
 Au_FPA.Density = 19.32; %g/cm^3
 Au_FPA.Density = Au_FPA.Density*10^-24/Au_FPA.M*6.022*10^23; %#/A^3
 Au_FPA.NvTPP = 11;
@@ -48,27 +49,43 @@ osc.qtran = 0.01:0.01:20;
 osc.eloss = eps:.1:110;
 osc.egap = eps;
 
-opt_elf = load("C:/Users/onr5/OneDrive - NIST/dev/seemc/Data/opt/au.diel");
-q = eps:0.1:10;
-eloss = eps:.5:500;
+current_full_path = dbstack('-completenames');
+current_file_name = dbstack;
+if ispc
+    ind = strfind(current_full_path(1).file,['Database\' current_file_name(1).file]);
+    dirData = [current_full_path(1).file(1:ind-2) filesep 'Data\'];
+elseif ismac || isunix
+    ind = strfind(current_full_path(1).file,['Database/' current_file_name(1).file]);
+    dirData = [current_full_path(1).file(1:ind-2) filesep 'Data/'];
+end
 
-tic
-[Au_FPA.ELF,~,~] = fpa_vector(q*a0,eloss/h2ev,opt_elf(:,1),opt_elf(:,4));
-toc
-Au_FPA.eloss = eloss;
-Au_FPA.q = q;
+% opt_elf = load([dirData '/opt/au.diel']);
+% q = eps:0.1:10;
+% eloss = eps:.5:500;
+% tic
+% [Au_FPA.ELF,~,~] = fpa_vector(q*a0,eloss/h2ev,opt_elf(:,1),opt_elf(:,4));
+% toc
+fpa_data = load([dirData 'elf_au_fpa.mat']);
+Au_FPA.eloss = fpa_data.omega;
+Au_FPA.q = fpa_data.q;
+Au_FPA.ELF = fpa_data.elf;
 Au_FPA.DIIMFP = zeros(N,2,numel(E0));
 Au_FPA.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > Au_FPA.Ef
         energy = E0(i) - Au_FPA.Ef;
         eloss = eps:(energy-eps)/(N-1):energy;
-        omega = eps:0.5:energy;
+        if energy < 10
+            omega = eps:0.01:energy;
+        else
+            omega = eps:0.2:energy;
+        end
         Au_FPA.DIIMFP(:,1,i) = eloss;
         % [iimfp, diimfp_] = diimfp(E0(i),omega,opt_elf(:,1),opt_elf(:,4));
-        [iimfp, diimfp_] = diimfp_interp_fpa(E0(i),omega,Au_FPA.ELF,Au_FPA.q,Au_FPA.eloss);
-        diimfp_interp = interp1(omega,diimfp_,eloss);
-        Au_FPA.DIIMFP(:,2,i) = diimfp_interp./trapz(eloss,diimfp_interp);
+        [iimfp, diimfp_] = diimfp_interp_fpa(E0(i),omega,Au_FPA.ELF,Au_FPA.q,Au_FPA.eloss,osc);
+        Au_FPA.DIIMFP(:,2,i) = interp1(omega,diimfp_,eloss);
+        ind = isnan(Au_FPA.DIIMFP(:,2,i));
+        Au_FPA.DIIMFP(ind,2,i) = diimfp_(end);
         Au_FPA.l_in(i) = 1/trapz(omega/h2ev,iimfp)*a0;
     else
         Au_FPA.l_in(i) = Inf;
