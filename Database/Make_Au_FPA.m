@@ -31,8 +31,8 @@ toc
 Au_FPA.DECS.x = data(1).x;
 for i = 1:numel(E0)
     Au_FPA.Elastic.sigma_el(i) = data(i).sigma_el;
-    Au_FPA.Elastic.l_el(i) = 1/data(i).sigma_el/Au_FPA.Density;
-    Au_FPA.Elastic.l_tr(i) = 1/data(i).sigma_tr1/Au_FPA.Density;
+    Au_FPA.Elastic.l_el(i) = 1/(data(i).sigma_el*a0^2*Au_FPA.Density);
+    Au_FPA.Elastic.l_tr(i) = 1/(data(i).sigma_tr1*a0^2*Au_FPA.Density);
     Au_FPA.DECS.y(:,i) = data(i).y;
 end
 %}

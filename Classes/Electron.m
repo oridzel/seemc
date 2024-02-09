@@ -4,6 +4,7 @@ classdef Electron < handle
         EnergyLoss double {mustBeNonnegative}
         InnerPotential double {mustBeNonnegative}
         PathLength double {mustBeNonnegative} = 0
+        InitialDepth double {mustBeNonnegative} = 0
         Layers(1,:) Layer
         currentLayer = 1
         multiLayer = false
@@ -58,6 +59,7 @@ classdef Electron < handle
             end
             obj.isSecondary = p.Results.isSecondary;
             obj.xyz = p.Results.xyz;
+            obj.InitialDepth = obj.xyz(end);
             obj.Generation = p.Results.generation;
             obj.ParentIndex = p.Results.index;
             if obj.isSecondary

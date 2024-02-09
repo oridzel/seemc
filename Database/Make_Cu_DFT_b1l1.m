@@ -31,8 +31,8 @@ toc
 Cu_DFT_b1l1.DECS.x = data(1).x;
 for i = 1:numel(E0)
     Cu_DFT_b1l1.Elastic.sigma_el(i) = data(i).sigma_el;
-    Cu_DFT_b1l1.Elastic.l_el(i) = 1/data(i).sigma_el/Cu_DFT_b1l1.Density;
-    Cu_DFT_b1l1.Elastic.l_tr(i) = 1/data(i).sigma_tr1/Cu_DFT_b1l1.Density;
+    Cu_DFT_b1l1.Elastic.l_el(i) = 1/(data(i).sigma_el*a0^2)/Cu_DFT_b1l1.Density;
+    Cu_DFT_b1l1.Elastic.l_tr(i) = 1/(data(i).sigma_tr1*a0^2)/Cu_DFT_b1l1.Density;
     Cu_DFT_b1l1.DECS.y(:,i) = data(i).y;
 end
 %}

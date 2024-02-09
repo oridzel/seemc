@@ -11,8 +11,9 @@ classdef SEEMC < handle
         onlyEscaped = true
         bse
         sey
-        energyHistogramPE
         energyHistogramSE
+        energyHistogramPE
+        depthHistogramSE
         coincidenceHistogram
         coordinateArray
     end
@@ -88,6 +89,7 @@ classdef SEEMC < handle
                             y.ParentIndex = res(e_count).ParentIndex;
                             y.Dead = res(e_count).Dead;
                             y.Inside = res(e_count).Inside;
+                            y.InitialDepth = res(e_count).InitialDepth;
                             if track
                                 y.Coordinates = res(e_count).coordinates;
                             end
@@ -102,6 +104,7 @@ classdef SEEMC < handle
                             y.ParentIndex = res(e_count).ParentIndex;
                             y.Dead = res(e_count).Dead;
                             y.Inside = res(e_count).Inside;
+                            y.InitialDepth = res(e_count).InitialDepth;
                             if track
                                 y.Coordinates = res(e_count).coordinates;
                             end
@@ -121,7 +124,7 @@ classdef SEEMC < handle
                 for j = 1:obj.numTrajectories
                     for k = 1:length(obj.statistics{i}{j})
                         if ~obj.statistics{i}{j}(k).Inside && ~obj.statistics{i}{j}(k).Dead
-                            if obj.statistics{i}{j}(k).isSecondary
+                            if obj.statistics{i}{j}(k).isSecondary || obj.statistics{i}{j}(k).Energy <= 50
                                 obj.sey(i) = obj.sey(i) + 1;
                             else
                                 obj.bse(i) = obj.bse(i) + 1;
@@ -173,9 +176,39 @@ classdef SEEMC < handle
             figure
             hold on
             box on
-            histogram(obj.energyHistogramPE{ind},nbins,DisplayName='Primaries')
             histogram(obj.energyHistogramSE{ind},nbins,DisplayName='Secondaries')
             xlabel('Electron energy (eV)')
+            ylabel('Counts')
+            fontsize(20,"points")
+            title(strrep(obj.matName,'_',' '))
+            legend
+        end
+
+        function calculateDepthHistograms(obj)
+            obj.depthHistogramSE = cell(numel(obj.energyArray),1);
+            for i = 1:numel(obj.energyArray)
+                for j = 1:obj.numTrajectories
+                    for k = 1:length(obj.statistics{i}{j})
+                        if ~obj.statistics{i}{j}(k).Inside && ~obj.statistics{i}{j}(k).Dead
+                            if obj.statistics{i}{j}(k).isSecondary
+                                obj.depthHistogramSE{i}(end+1) = obj.statistics{i}{j}(k).InitialDepth;
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        function plotDepthDistribution(obj,ind,nbins,varargin)
+            if nargin < 3
+                nbins = 200;
+            end
+            figure
+            hold on
+            box on
+            histogram(obj.depthHistogramPE{ind},nbins,DisplayName='Primaries')
+            histogram(obj.depthHistogramSE{ind},nbins,DisplayName='Secondaries')
+            xlabel('Initial depth (A)')
             ylabel('Counts')
             fontsize(20,"points")
             title(strrep(obj.matName,'_',' '))
