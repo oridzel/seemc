@@ -1,6 +1,6 @@
 function PMMA_Drude = Make_PMMA_Drude
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
 N = 4000;
 
 %% Basic
@@ -18,6 +18,7 @@ PMMA_Drude.Affinity = 4.5;
 PMMA_Drude.Phonon.eps_zero = 3.9;
 PMMA_Drude.Phonon.eps_inf = 2.2;
 PMMA_Drude.Phonon.eloss = 0.1;
+PMMA_Drude.isMetal = false;
 
 %% Elastic properties
 PMMA_Drude.Elastic.x = zeros(numel(E0),1);
@@ -33,9 +34,10 @@ tic;
 toc
 PMMA_Drude.DECS.x = data(1).x;
 for i = 1:numel(E0)
-    PMMA_Drude.Elastic.l_el(i) = 1/data(i).sigma_el/PMMA_Drude.Density;
-    PMMA_Drude.Elastic.l_tr(i) = 1/data(i).sigma_tr1/PMMA_Drude.Density;
-    PMMA_Drude.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
+    PMMA_Drude.Elastic.sigma_el(i) = data(i).sigma_el;
+    PMMA_Drude.Elastic.l_el(i) = 1/(data(i).sigma_el*a0^2*PMMA_Drude.Density);
+    PMMA_Drude.Elastic.l_tr(i) = 1/(data(i).sigma_tr1*a0^2*PMMA_Drude.Density);
+    PMMA_Drude.DECS.y(:,i) = data(i).y;
 end
 
 %% Inelastic properties
@@ -58,10 +60,15 @@ PMMA_Drude.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > 2*PMMA_Drude.Eg + PMMA_Drude.Evb
         energy = E0(i) - PMMA_Drude.Eg - PMMA_Drude.Evb;
-        osc.eloss = PMMA_Drude.Eg:(energy-PMMA_Drude.Eg)/(N-1):energy;
-        PMMA_Drude.DIIMFP(:,1,i) = osc.eloss;
+        eloss = PMMA_Drude.Eg:(energy-PMMA_Drude.Eg)/(N-1):energy;
+        if energy < 10
+            osc.eloss = PMMA_Drude.Eg:0.01:energy;
+        else
+            osc.eloss = PMMA_Drude.Eg:0.2:energy;
+        end
+        PMMA_Drude.DIIMFP(:,1,i) = eloss;
         [iimfp, diimfp] = ndiimfp(osc,E0(i));
-        PMMA_Drude.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
+        PMMA_Drude.DIIMFP(:,2,i) = interp1(osc.eloss,diimfp,eloss);
         PMMA_Drude.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PMMA_Drude.l_in(i) = Inf;

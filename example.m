@@ -1,14 +1,14 @@
 clear
 
-inputpar.matName = { 'Cu_FPA' };
+inputpar.matName = { 'PMMA_MLL' };
 % inputpar.thickness = 50;
-inputpar.numTrajectories = 100000;
+inputpar.numTrajectories = 10000;
 inputpar.energy = [20:10:100 200:50:500 600:100:1000];
 
 s = SEEMC(inputpar);
 s.theta_0 = 0;
 s.onlyEscaped = true;
-s.cbRef = false;
+s.cbRef = true;
 s.trackTrajectories = false;
 
 %% Run simulation

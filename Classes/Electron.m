@@ -131,7 +131,7 @@ classdef Electron < handle
                 diimfp = obj.Layers(obj.currentLayer).Material.MaterialData.DIIMFP(:,2,energy_index);
                 cumdiimfp = cumtrapz(eloss,diimfp);
                 % cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
-                 while true
+                while true
                     obj.EnergyLoss = interp1(cumdiimfp,eloss,rand*cumdiimfp(end));
                     if obj.EnergyLoss < obj.Energy
                         break;

@@ -1,6 +1,6 @@
 function SiO2_Drude = Make_SiO2_Drude
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
 N = 4000;
 
 %% Basic
@@ -18,6 +18,7 @@ SiO2_Drude.Affinity = 1.1;
 SiO2_Drude.Phonon.eps_zero = 3.84; % static dielectric constant
 SiO2_Drude.Phonon.eps_inf = 2.25; % high-frequency dielectric constant (the square of the static refractive index)
 SiO2_Drude.Phonon.eloss = 0.1;
+SiO2_Drude.isMetal = false;
 
 %% Elastic properties
 % {
@@ -34,9 +35,10 @@ tic;
 toc
 SiO2_Drude.DECS.x = data(1).x;
 for i = 1:numel(E0)
-    SiO2_Drude.Elastic.l_el(i) = 1/data(i).sigma_el/SiO2_Drude.Density;
-    SiO2_Drude.Elastic.l_tr(i) = 1/data(i).sigma_tr1/SiO2_Drude.Density;
-    SiO2_Drude.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
+    SiO2_Drude.Elastic.sigma_el(i) = data(i).sigma_el;
+    SiO2_Drude.Elastic.l_el(i) = 1/(data(i).sigma_el*a0^2*SiO2_Drude.Density);
+    SiO2_Drude.Elastic.l_tr(i) = 1/(data(i).sigma_tr1*a0^2*SiO2_Drude.Density);
+    SiO2_Drude.DECS.y(:,i) = data(i).y;
 end
 %}
 
@@ -60,10 +62,15 @@ SiO2_Drude.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > 2*SiO2_Drude.Eg + SiO2_Drude.Evb
         energy = E0(i) - SiO2_Drude.Eg - SiO2_Drude.Evb;
-        osc.eloss = SiO2_Drude.Eg:(energy-SiO2_Drude.Eg)/(N-1):energy;
-        SiO2_Drude.DIIMFP(:,1,i) = osc.eloss;
+        eloss = SiO2_Drude.Eg:(energy-SiO2_Drude.Eg)/(N-1):energy;
+        if energy < 10
+            osc.eloss = SiO2_Drude.Eg:0.01:energy;
+        else
+            osc.eloss = SiO2_Drude.Eg:0.2:energy;
+        end
+        SiO2_Drude.DIIMFP(:,1,i) = eloss;
         [iimfp, diimfp] = ndiimfp(osc,E0(i));
-        SiO2_Drude.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
+        SiO2_Drude.DIIMFP(:,2,i) = interp1(osc.eloss,diimfp,eloss);
         SiO2_Drude.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         SiO2_Drude.l_in(i) = Inf;

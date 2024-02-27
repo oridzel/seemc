@@ -1,6 +1,6 @@
 function PS_Drude = Make_PS_Drude
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
 N = 4000;
 
 %% Basic
@@ -18,6 +18,7 @@ PS_Drude.Affinity = 3.5;
 PS_Drude.Phonon.eps_zero = 2.5; % static dielectric constant
 PS_Drude.Phonon.eps_inf = 1.01; % high-frequency dielectric constant (the square of the static refractive index)
 PS_Drude.Phonon.eloss = 0.3;
+PS_Drude.isMetal = false;
 
 %% Elastic properties
 PS_Drude.Elastic.x = zeros(numel(E0),1);
@@ -33,9 +34,10 @@ tic;
 toc
 PS_Drude.DECS.x = data(1).x;
 for i = 1:numel(E0)
-    PS_Drude.Elastic.l_el(i) = 1/data(i).sigma_el/PS_Drude.Density;
-    PS_Drude.Elastic.l_tr(i) = 1/data(i).sigma_tr1/PS_Drude.Density;
-    PS_Drude.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
+    PS_Drude.Elastic.sigma_el(i) = data(i).sigma_el;
+    PS_Drude.Elastic.l_el(i) = 1/(data(i).sigma_el*a0^2*PS_Drude.Density);
+    PS_Drude.Elastic.l_tr(i) = 1/(data(i).sigma_tr1*a0^2*PS_Drude.Density);
+    PS_Drude.DECS.y(:,i) = data(i).y;
 end
 
 %% Inelastic properties
@@ -58,10 +60,15 @@ PS_Drude.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > 2*PS_Drude.Eg + PS_Drude.Evb
         energy = E0(i) - PS_Drude.Eg - PS_Drude.Evb;
-        osc.eloss = PS_Drude.Eg:(energy-PS_Drude.Eg)/(N-1):energy;
-        PS_Drude.DIIMFP(:,1,i) = osc.eloss;
+        eloss = PS_Drude.Eg:(energy-PS_Drude.Eg)/(N-1):energy;
+        if energy < 10
+            osc.eloss = PS_Drude.Eg:0.01:energy;
+        else
+            osc.eloss = PS_Drude.Eg:0.2:energy;
+        end
+        PS_Drude.DIIMFP(:,1,i) = eloss;
         [iimfp, diimfp] = ndiimfp(osc,E0(i));
-        PS_Drude.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
+        PS_Drude.DIIMFP(:,2,i) = interp1(osc.eloss,diimfp,eloss);
         PS_Drude.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PS_Drude.l_in(i) = Inf;

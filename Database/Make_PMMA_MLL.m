@@ -1,6 +1,6 @@
 function PMMA_MLL = Make_PMMA_MLL
 
-E0 = [1:100 150:50:500 600:100:2500 2750:250:5000 5500:500:30000];
+E0 = [1:100 110:10:200 220:20:300 350:50:500 600:100:2500 2750:250:5000 5500:500:30000];
 N = 4000;
 
 %% Basic
@@ -18,6 +18,7 @@ PMMA_MLL.Affinity = 4.5;
 PMMA_MLL.Phonon.eps_zero = 3.9;
 PMMA_MLL.Phonon.eps_inf = 2.2;
 PMMA_MLL.Phonon.eloss = 0.1;
+PMMA_MLL.isMetal = false;
 
 %% Elastic properties
 PMMA_MLL.Elastic.x = zeros(numel(E0),1);
@@ -33,9 +34,10 @@ tic;
 toc
 PMMA_MLL.DECS.x = data(1).x;
 for i = 1:numel(E0)
-    PMMA_MLL.Elastic.l_el(i) = 1/data(i).sigma_el/PMMA_MLL.Density;
-    PMMA_MLL.Elastic.l_tr(i) = 1/data(i).sigma_tr1/PMMA_MLL.Density;
-    PMMA_MLL.DECS.y(:,i) = data(i).y/trapz(data(i).x,data(i).y);
+    PMMA_MLL.Elastic.sigma_el(i) = data(i).sigma_el;
+    PMMA_MLL.Elastic.l_el(i) = 1/(data(i).sigma_el*a0^2*PMMA_MLL.Density);
+    PMMA_MLL.Elastic.l_tr(i) = 1/(data(i).sigma_tr1*a0^2*PMMA_MLL.Density);
+    PMMA_MLL.DECS.y(:,i) = data(i).y;
 end
 
 %% Inelastic properties
@@ -60,10 +62,15 @@ PMMA_MLL.l_in = zeros(numel(E0),1);
 for i = 1:length(E0)
     if E0(i) > 2*PMMA_MLL.Eg + PMMA_MLL.Evb
         energy = E0(i) - PMMA_MLL.Eg - PMMA_MLL.Evb;
-        osc.eloss = PMMA_MLL.Eg:(energy-PMMA_MLL.Eg)/(N-1):energy;
-        PMMA_MLL.DIIMFP(:,1,i) = osc.eloss;
+        eloss = PMMA_MLL.Eg:(energy-PMMA_MLL.Eg)/(N-1):energy;
+        if energy < 10
+            osc.eloss = PMMA_MLL.Eg:0.01:energy;
+        else
+            osc.eloss = PMMA_MLL.Eg:0.2:energy;
+        end
+        PMMA_MLL.DIIMFP(:,1,i) = eloss;
         [iimfp, diimfp] = ndiimfp(osc,E0(i));
-        PMMA_MLL.DIIMFP(:,2,i) = diimfp./trapz(osc.eloss,diimfp);
+        PMMA_MLL.DIIMFP(:,2,i) = interp1(osc.eloss,diimfp,eloss);
         PMMA_MLL.l_in(i) = 1/trapz(osc.eloss/h2ev,iimfp)*a0;
     else
         PMMA_MLL.l_in(i) = Inf;
