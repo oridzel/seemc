@@ -1,6 +1,6 @@
 clear
 
-inputpar.matName = { 'PMMA_MLL' };
+inputpar.matName = { 'SiO2_FPA' };
 % inputpar.thickness = 50;
 inputpar.numTrajectories = 10000;
 inputpar.energy = [20:10:100 200:50:500 600:100:1000];
@@ -8,7 +8,7 @@ inputpar.energy = [20:10:100 200:50:500 600:100:1000];
 s = SEEMC(inputpar);
 s.theta_0 = 0;
 s.onlyEscaped = true;
-s.cbRef = true;
+s.cbRef = false;
 s.trackTrajectories = false;
 
 %% Run simulation

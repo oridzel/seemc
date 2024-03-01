@@ -1,9 +1,5 @@
-function [iimfp,x_in] = diimfp_interp_fpa(E0,eloss,fpa_elf,fpa_q,fpa_omega,osc,egap,varargin)
-    if nargin < 7
-        egap = 0;
-    end
-
-    E0 = (E0 - egap)/h2ev;
+function [iimfp,x_in] = diimfp_interp_fpa(E0,eloss,fpa_elf,fpa_q,fpa_omega,osc)
+    E0 = (E0 - osc.egap)/h2ev;
     omega = eloss/h2ev;
     n_q = 100;   
     C = 137.036; % a.u.
