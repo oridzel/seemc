@@ -3,7 +3,8 @@ classdef Sample
         Name
     end
     properties (Constant)
-        kbt = 9.445e-4
+        T = 300 % K
+		k_B = 8.617e-5 % eV/K
     end    
     properties
         MaterialData
@@ -55,15 +56,14 @@ classdef Sample
             emfp = interp1(obj.MaterialData.DECS.E0,obj.MaterialData.Elastic.l_el,energy);
         end
 
-        function phmfp = getIPHMFP(obj,energy)
+        function iphmfp = getIPHMFP(obj,energy)
             if isfield(obj.MaterialData,'Phonon')
-                dephe = obj.MaterialData.Phonon.eloss/energy;
-                sq_e = sqrt(1 - dephe);
-                phmfp = (obj.MaterialData.Phonon.eps_zero - obj.MaterialData.Phonon.eps_inf)...
-                    /(obj.MaterialData.Phonon.eps_zero*obj.MaterialData.Phonon.eps_inf)...
-                    *dephe*( (1/(exp(obj.MaterialData.Phonon.eloss/obj.kbt)-1))+1 )/2*log( (1.0+sq_e)/(1.0-sq_e) );
+                de_over_e = obj.MaterialData.Phonon.eloss/energy;
+                n_lo = 1./(exp(obj.MaterialData.Phonon.eloss/(obj.T*obj.k_B)) - 1);
+                ln_plus = (1 + sqrt(abs(1 - de_over_e))) / (1 - sqrt(abs(1 - de_over_e)));
+                iphmfp = 1/a0 * (1/obj.MaterialData.Phonon.eps_inf - 1/obj.MaterialData.Phonon.eps_zero) .* ( n_lo + 1 ) .* de_over_e/2 * log(ln_plus);
             else
-                phmfp = 0;
+                iphmfp = 0;
             end
         end
 

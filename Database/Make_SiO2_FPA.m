@@ -17,7 +17,7 @@ SiO2_FPA.Evb = 10;
 SiO2_FPA.Affinity = 1.1;
 SiO2_FPA.Phonon.eps_zero = 3.84; % static dielectric constant
 SiO2_FPA.Phonon.eps_inf = 2.25; % high-frequency dielectric constant (the square of the static refractive index)
-SiO2_FPA.Phonon.eloss = 0.1;
+SiO2_FPA.Phonon.eloss = [63 153]*1e-3;
 SiO2_FPA.isMetal = false;
 
 %% Elastic properties

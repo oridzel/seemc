@@ -161,7 +161,11 @@ classdef Electron < handle
             else
                 rn = rand;
                 e = (obj.Energy - obj.Layers(obj.currentLayer).Material.MaterialData.Eg - obj.Layers(obj.currentLayer).Material.MaterialData.Evb)/h2ev;
-                de = obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss/h2ev;
+                if rand < obj.IPHMFP(1)
+                    de = obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss(1)/h2ev;
+                else
+                    de = obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss(2)/h2ev;
+                end
                 if e - de > 0
                     bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
                     obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
@@ -289,7 +293,7 @@ classdef Electron < handle
             end
         end
         function val = get.ITMFP(obj)
-            val = obj.IEMFP + obj.IIMFP + obj.IPHMFP;
+            val = obj.IEMFP + obj.IIMFP + sum(obj.IPHMFP);
         end
     end
 end
