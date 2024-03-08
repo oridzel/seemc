@@ -161,7 +161,7 @@ classdef Electron < handle
             else
                 rn = rand;
                 e = (obj.Energy - obj.Layers(obj.currentLayer).Material.MaterialData.Eg - obj.Layers(obj.currentLayer).Material.MaterialData.Evb)/h2ev;
-                if rand < obj.IPHMFP(1)
+                if rand < obj.IPHMFP(1)/sum(obj.IPHMFP)
                     de = obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss(1)/h2ev;
                 else
                     de = obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss(2)/h2ev;
@@ -169,7 +169,7 @@ classdef Electron < handle
                 if e - de > 0
                     bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
                     obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
-                    obj.Energy = obj.Energy - obj.Layers(obj.currentLayer).Material.MaterialData.Phonon.eloss;
+                    obj.Energy = obj.Energy - de;
                     obj.died;
                     if ~obj.Dead && isreal(obj.Deflection(1))
                         obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
