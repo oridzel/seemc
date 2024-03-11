@@ -169,7 +169,7 @@ classdef Electron < handle
                 if e - de > 0
                     bph = (e + e - de + 2*sqrt(e*(e - de))) / (e + e - de - 2*sqrt(e*(e - de)));
                     obj.Deflection(1) = acos( (e + e - de)/(2*sqrt(e*(e - de)))*(1 - bph^rn) + bph^rn );
-                    obj.Energy = obj.Energy - de;
+                    obj.Energy = obj.Energy - de*h2ev;
                     obj.died;
                     if ~obj.Dead && isreal(obj.Deflection(1))
                         obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
