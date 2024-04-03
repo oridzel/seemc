@@ -8,7 +8,7 @@ ind = strfind(current_full_path(1).file,current_file_name(1).file);
 load MaterialData.mat
 
 %% Metals
-% MaterialData.Au_FPA = Make_Au_FPA;
+MaterialData.Au_FPA = Make_Au_FPA;
 % MaterialData.Au_Mermin = Make_Au_Mermin;
 
 % MaterialData.Cu_FPA = Make_Cu_FPA;
@@ -26,7 +26,7 @@ load MaterialData.mat
 % MaterialData.PMMA_Drude = Make_PMMA_Drude;
 % MaterialData.PMMA_MLL = Make_PMMA_MLL;
 % 
-MaterialData.PS_FPA = Make_PS_FPA;
+% MaterialData.PS_FPA = Make_PS_FPA;
 % MaterialData.PS_Drude = Make_PS_Drude;
 % MaterialData.PS_MLL = Make_PS_MLL;
 % 

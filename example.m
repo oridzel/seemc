@@ -1,10 +1,10 @@
 clear
 
-inputpar.matName = { 'PS_FPA' };
+inputpar.matName = { 'Au_FPA' };
 % inputpar.thickness = 50;
-inputpar.numTrajectories = 10000;
-inputpar.energy = [10:10:100 200:50:500 600:100:1000];
-% inputpar.energy = [2000 3000];
+inputpar.numTrajectories = 1000;
+% inputpar.energy = [10:10:100 200:50:500 600:100:1000];
+inputpar.energy = [20 50 100 200 500 1000 2000];
 
 s = SEEMC(inputpar);
 s.theta_0 = 0;
@@ -25,8 +25,8 @@ s.plotTrajectories(1);
 
 %% Spectra
 %{
-s.calculateEnergyHistograms(1);
-s.plotEnergyDistribution;
+s.calculateEnergyHistograms;
+s.plotEnergyDistribution(1,500);
 %}
 
 %% Yields

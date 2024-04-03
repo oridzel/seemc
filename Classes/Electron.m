@@ -122,7 +122,6 @@ classdef Electron < handle
                 % decs = obj.Layers(obj.currentLayer).Material.getDECS(obj.Energy);
                 decs = obj.Layers(obj.currentLayer).Material.MaterialData.DECS.y(:,energy_index);
                 cumsigma = cumtrapz( obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,2*pi*decs.*sin(obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x) );
-                % cumsigma = (cumsigma - cumsigma(1))/(cumsigma(end) - cumsigma(1));
                 obj.Deflection(1) = interp1(cumsigma,obj.Layers(obj.currentLayer).Material.MaterialData.DECS.x,rand*cumsigma(end));
                 obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
             elseif obj.ScatteringType == 1
@@ -130,7 +129,6 @@ classdef Electron < handle
                 eloss = obj.Layers(obj.currentLayer).Material.MaterialData.DIIMFP(:,1,energy_index);
                 diimfp = obj.Layers(obj.currentLayer).Material.MaterialData.DIIMFP(:,2,energy_index);
                 cumdiimfp = cumtrapz(eloss,diimfp);
-                % cumdiimfp = (cumdiimfp - cumdiimfp(1))/(cumdiimfp(end)-cumdiimfp(1));
                 while true
                     obj.EnergyLoss = interp1(cumdiimfp,eloss,rand*cumdiimfp(end));
                     if obj.EnergyLoss < obj.Energy
@@ -138,24 +136,22 @@ classdef Electron < handle
                     end
                 end
                 loss = true;
-                if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
-                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Layers(obj.currentLayer).Material.MaterialData.Ef);
-                else
-                    obj.EnergySE = fegdos(obj.EnergyLoss,obj.Layers(obj.currentLayer).Material.MaterialData.Evb);
-                end
                 obj.Energy = obj.Energy - obj.EnergyLoss;
                 obj.died;
-                if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
-                    min_energy = 1;
-                else
-                    min_energy = obj.Layers(obj.currentLayer).Material.MaterialData.Eg;
-                end
-                if ~obj.Dead && obj.Energy > min_energy
-                    [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
-                    cumang = cumtrapz(theta, angdist.*sin(theta));
-                    if isfinite(cumang)
-                        obj.Deflection(1) = interp1(cumang,theta,rand*cumang(end));
-                        obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
+                if ~obj.Dead
+                    obj.fegdos;
+                    if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
+                        min_energy = 1;
+                    else
+                        min_energy = obj.Layers(obj.currentLayer).Material.MaterialData.Eg;
+                    end
+                    if obj.Energy > min_energy
+                        [theta, angdist] = obj.Layers(obj.currentLayer).Material.getAngularIIMFP(obj.Energy+obj.EnergyLoss,obj.EnergyLoss);
+                        cumang = cumtrapz(theta, angdist.*sin(theta));
+                        if isfinite(cumang)
+                            obj.Deflection(1) = interp1(cumang,theta,rand*cumang(end));
+                            obj.uvw = updateDirection(obj.uvw,obj.Deflection,1);
+                        end
                     end
                 end
             else
@@ -179,6 +175,17 @@ classdef Electron < handle
                     obj.Dead = true;
                 end
             end
+        end
+        function fegdos(obj)
+            if obj.Layers(obj.currentLayer).Material.MaterialData.isMetal
+                energyRef = obj.Layers(obj.currentLayer).Material.MaterialData.Ef;
+            else
+                energyRef = obj.Layers(obj.currentLayer).Material.MaterialData.Evb;
+            end
+            ener = 0:0.2:energyRef;
+            dist = sqrt(ener.*(ener + obj.EnergyLoss));
+            cumdos = cumtrapz(ener,dist);
+            obj.EnergySE = interp1(cumdos,ener,rand*cumdos(end));
         end
         function escape(obj)
             if ~obj.Dead
@@ -213,7 +220,7 @@ classdef Electron < handle
                         end
                     else
                         obj.uvw(end) = -1*obj.uvw(end);
-                        obj.xyz(end) = -1*obj.xyz(end);
+                        obj.xyz(end) = 1e-10; %-1*obj.xyz(end);
                         if obj.trackCoordinates
                             obj.coordinates(end,:) = [obj.xyz(1),obj.xyz(2),-obj.xyz(3),obj.Energy];
                         end

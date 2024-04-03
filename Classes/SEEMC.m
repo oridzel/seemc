@@ -124,7 +124,7 @@ classdef SEEMC < handle
                 for j = 1:obj.numTrajectories
                     for k = 1:length(obj.statistics{i}{j})
                         if ~obj.statistics{i}{j}(k).Inside && ~obj.statistics{i}{j}(k).Dead
-                            if obj.statistics{i}{j}(k).isSecondary || obj.statistics{i}{j}(k).Energy <= 50
+                            if obj.statistics{i}{j}(k).isSecondary % || obj.statistics{i}{j}(k).Energy <= 50
                                 obj.sey(i) = obj.sey(i) + 1;
                             else
                                 obj.bse(i) = obj.bse(i) + 1;
@@ -176,6 +176,7 @@ classdef SEEMC < handle
             figure
             hold on
             box on
+            histogram(obj.energyHistogramPE{ind},nbins,DisplayName='Primaries')
             histogram(obj.energyHistogramSE{ind},nbins,DisplayName='Secondaries')
             xlabel('Electron energy (eV)')
             ylabel('Counts')
